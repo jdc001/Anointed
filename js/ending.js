@@ -156,7 +156,7 @@ async function shareCard(draw, name, M = SC) {
   x.fillStyle = '#8e1f1b'; x.font = '700 58px Cinzel, Georgia, serif'; x.textAlign = 'center'; x.fillText('Anointed', 540, 130); x.font = 'italic 30px Georgia, serif'; x.fillStyle = '#5c4630'; x.fillText(M.game, 540, 172);
   x.fillStyle = '#5c4630'; x.font = 'italic 34px Georgia, serif'; x.fillText(`Anno Domini ${M.date.y0}`, 540, 180);
   await draw(x);
-  x.fillStyle = '#5c4630'; x.font = 'italic 28px Georgia, serif'; x.fillText('jdc001.github.io/crown-of-the-franks', 540, 1290);
+  x.fillStyle = '#5c4630'; x.font = 'italic 28px Georgia, serif'; x.fillText('jdc001.github.io/Anointed', 540, 1290);
   const blob = await new Promise(r => c.toBlob(r, 'image/png'));
   const file = new File([blob], name, { type: 'image/png' });
   try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Anointed' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }

@@ -1,6 +1,8 @@
 # Anointed, v6.50
 
-Play it at https://jdc001.github.io/crown-of-the-franks/ (open in Safari, then Share → Add to Home Screen).
+Play it at https://jdc001.github.io/Anointed/ (open in Safari, then Share → Add to Home Screen).
+
+The game moved here from `jdc001/crown-of-the-franks`. Both addresses are on jdc001.github.io, so campaigns, trophies and settings saved on a device carry over by themselves.
 
 The old map of Europe (v4) lives on as **Emperor: 1000 AD**: https://jdc001.github.io/Emperor-1000/ . It picks up campaigns saved under v4 on the same device by itself.
 
