@@ -1,7 +1,7 @@
 {
   "name": "Anointed",
   "short_name": "Anointed",
-  "description": "A turn-based strategy game of crowns and succession, from France in 987 to England in 1066.",
+  "description": "A turn-based strategy game of crowns and succession: France in 987, the Empire in 1002 and England in 1066.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

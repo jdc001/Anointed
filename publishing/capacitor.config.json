@@ -1,5 +1,5 @@
 {
-  "appId": "com.example.crownofthefranks",
+  "appId": "com.example.anointed",
   "appName": "Anointed",
   "webDir": "www",
   "ios": { "contentInset": "never", "backgroundColor": "#1a120b" }
