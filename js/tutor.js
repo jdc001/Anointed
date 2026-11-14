@@ -26,5 +26,6 @@ function renderTutor() {
   if (T.i >= TUT.length) { G.tut = null; if (el) el.remove(); report('The guide is done', 'You know the whole of it now: build, raise, ally, march and strike; sign pacts to guard your back; and use the Church and marriages to win what swords cannot. A wooden castle takes one turn to raise and makes any county a stepping stone. The rest is yours. How to play, in Settings, has the details.'); return; }
   if (!el) { el = document.createElement('div'); el.id = 'tutor'; $('#mapwrap').appendChild(el); }
   const s = TUT[T.i];
+  if (el.dataset.step !== s.id) { el.dataset.step = s.id; el.classList.remove('new'); void el.offsetWidth; el.classList.add('new'); }
   setHTML(el, `<div class="tn">${T.i + 1}/${TUT.length}</div><div class="tb"><b>${esc(s.t)}</b>${esc(s.b())}</div><div class="tx"><button onclick="tutorSkip()">Skip</button><button onclick="tutorEnd()">End guide</button></div>`);
 }

@@ -116,7 +116,7 @@ function openLog() {
 }
 
 // ================= SETTINGS =================
-const APP_VERSION = '6.47';
+const APP_VERSION = '6.48';
 function openSettings() {
   const seg = (key, opts) => `<div class="seg">${opts.map(([v, l, i]) => `<button class="${SET[key] === v ? 'on' : ''}" onclick="setOpt('${key}','${v}')">${ico(i)}${l}</button>`).join('')}</div>`;
   const sw = key => `<div class="sw${SET[key] ? ' on' : ''}" onclick="setOpt('${key}',${!SET[key]})"></div>`;
@@ -230,27 +230,51 @@ function gameOver() {
 // the maps, side by side on the title screen
 function mapPicker() {
   const ms = Object.values(MAPS); if (ms.length < 2) return '';
-  return `<div class="mappick">${ms.map(m => `<button class="mp${m.id === MAP_ID ? ' on' : ''}" onclick="pickMap('${m.id}')">${m.FACTIONS.slice(0, 3).map(f => armsSvg(f.arms, 22)).join('')}<span class="t"><b>${esc(m.name)}</b><small>${esc(m.sub)}</small></span>${mapLocked(m.id) ? `<span class="lockb">${ico('lock')}Expansion</span>` : m.id === MAP_ID ? '<span class="lockb free">Playing</span>' : ''}</button>`).join('')}</div>`;
+  return `<div class="mappick">${ms.map(m => `<button class="mp${m.id === MAP_ID ? ' on' : ''}" onclick="pickMap('${m.id}')">${m.FACTIONS.slice(0, 3).map(f => armsSvg(f.arms, 22)).join('')}<span class="t"><b>${esc(m.name)}</b><small>${esc(m.sub)}</small></span><span class="go">${ico('next')}</span>${mapLocked(m.id) ? `<span class="lockb">${ico('lock')}Expansion</span>` : m.id === MAP_ID && G && !G.over ? '<span class="lockb free">Playing</span>' : ''}</button>`).join('')}</div>`;
 }
-function pickMap(id) { if (id === MAP_ID) return; if (mapLocked(id)) return openMapUnlock(id); sfx('click'); switchMap(id); }
+// choosing a kingdom opens its houses; another kingdom reloads the page on that map, then opens its houses
+function pickMap(id) { if (mapLocked(id)) return openMapUnlock(id); sfx('click'); if (id === MAP_ID) return showHouses(); switchMap(id, 'houses'); }
+// the guided first game: Normandy in 987, gentle rivals, the guide switched on
+const TUT_HOUSE = 'normandy';
+function startTutorial(sure) {
+  if (MAP_ID !== 'france') return switchMap('france', 'tutorial');
+  const s = loadSave();
+  if (!sure && s && !s.over && s.v === 8) return showModal(`<div class="rep"><div class="sealmark">${ico('scroll')}</div><h2>Start the guided game?</h2><p class="ctr">It replaces the campaign you have in progress on this map. Save it to a slot first if you want to keep it.</p><div class="grid2"><button class="btn gold" onclick="closeModal();startTutorial(true)">Start the guide</button><button class="btn" onclick="closeModal();openSaves()">Save it first</button></div></div>`, '', { closable: true });
+  SET.guided = true; SET.diff = 'gentle'; SET.tutStarted = true; saveSettings();
+  startGame(TUT_HOUSE);
+}
+function tutorialCard() {
+  const fresh = !SET.tutStarted && !profile().games;
+  return `<button class="tutcard${fresh ? ' fresh' : ''}" onclick="startTutorial()"><span class="ti">${ico('scroll')}</span><span class="tt"><span class="tk">${fresh ? 'New to Anointed? Start here' : 'Learn to play'}</span><b>The guided campaign</b><small>Normandy, 987, against gentle rivals. A step-by-step guide shows you what to do, one thing at a time.</small></span><span class="go">${ico('next')}</span></button>`;
+}
 function oldCampaign() { try { const o = localStorage.getItem('crownOfTheFranks987v7'); if (o && !JSON.parse(o).over) return true; for (let n = 1; n <= SLOTS; n++) { const s = readSlot(n); if (s && s.game && s.game.v === 7) return true; } } catch (e) { } return false; }
+function titleShell(inner) { const t = $('#title'); t.style.display = 'block'; setMusic('title'); t.innerHTML = `<div class="tbg">${titleMap()}</div><div class="inner">${inner}</div>`; t.scrollTop = 0; }
 function showTitle() {
   const s = loadSave();
-  const t = $('#title'); t.style.display = 'block'; setMusic('title');
-  const card = f => `<div class="fcard${houseLocked(f.id) ? ' locked' : ''}" style="--c:${f.color}" onclick="openFaction('${f.id}')">${houseLocked(f.id) ? `<span class="lockb">${ico('lock')}Full game</span>` : STORE.on && !fullGame() ? '<span class="lockb free">Free</span>' : ''}${shield(f.id, 46)}<div style="min-width:0"><h3>${f.name}</h3><div class="r">${f.title} ${f.pname}</div><div class="b">${f.blurb}</div><div class="tr">${ico('star')}<span>${f.trait}</span></div></div></div>`;
-  t.innerHTML = `<div class="tbg">${titleMap()}</div><div class="inner"><div class="hero">${titlePennant('l')}${titlePennant('r')}${titleCrown()}<div class="ad">ANNO DOMINI ${SC.date.roman}</div><h1 class="gild">Anointed</h1><div class="gsub">${SC.game}</div><div class="orn">❦</div></div>
-    <div id="titlerank">${rankBox()}</div>
+  titleShell(`<div class="hero">${titlePennant('l')}${titlePennant('r')}${titleCrown()}<div class="ad">ANNO DOMINI ${SC.date.roman}</div><h1 class="gild">Anointed</h1><div class="gsub">${SC.game}</div><div class="orn">❦</div></div>
+    ${s && !s.over && s.v === 8 ? `<div class="contbox"><button class="btn gold big" onclick="continueGame()"><span class="lbl">${shield(s.player, 20)} Continue as ${s.fdefs.find(d => d.id === s.player).name}</span><small>${SC.name} · ${dateStr(s.turn)} · ${s.fdefs.filter(d => s.fac[d.id].alive).length - 1} rivals left</small></button></div>` : ''}
+    ${tutorialCard()}
+    <h2>Choose a kingdom</h2>
     ${mapPicker()}
-    <p class="lead">${SC.intro.lead}</p>
+    <p class="ctr" style="color:#d9c9a3;font-style:italic;margin:6px 0 0">Tap a kingdom to see its houses and pick yours.</p>
     ${oldCampaign() ? `<div class="notebox" style="color:var(--ink,#2a1d12)">${ico('scroll')} A campaign from the old map of Europe is saved on this device. It plays on in <a href="https://jdc001.github.io/Emperor-1000/" style="color:inherit;font-weight:700">Emperor: 1000 AD</a>, which picks it up by itself.</div>` : ''}
-    ${s && !s.over && s.v === 8 ? `<div class="contbox"><button class="btn gold big" onclick="continueGame()"><span class="lbl">${shield(s.player, 20)} Continue as ${s.fdefs.find(d => d.id === s.player).name}</span><small>${dateStr(s.turn)} · ${s.fdefs.filter(d => s.fac[d.id].alive).length - 1} rivals left</small></button></div>` : ''}
-    ${anySlot() ? `<div class="row ctr" style="margin:6px 0 10px"><button class="btn" onclick="openSaves()"><span class="lbl">${ico('chest')}Load a saved game</span></button></div>` : ''}
-    ${!fullGame() ? `<div class="row ctr" style="margin:6px 0 4px"><button class="btn gold" onclick="openUnlock()"><span class="lbl">${ico('crown')}Unlock the full game</span><small>all fifteen houses, every difficulty, the challenges</small></button></div>` : ''}
-    ${challengeBox()}
-    ${SC.groups.map(([h, ids]) => `<h2>${h}</h2><div class="facs">${FACTIONS.filter(f => ids ? ids.includes(f.id) : !SC.groups.some(g => g[1] && g[1].includes(f.id))).map(card).join('')}</div>`).join('')}
-    <p class="ctr" style="color:#d9c9a3;font-style:italic;margin-top:18px">New games: ${GOALS[setGoal()].n.toLowerCase()} · ${DIFF[SET.diff || 'gentle'].n.toLowerCase()} rivals · change them on a house's page</p>
+    ${!fullGame() ? `<div class="row ctr" style="margin:14px 0 4px"><button class="btn gold" onclick="openUnlock()"><span class="lbl">${ico('crown')}Unlock the full game</span><small>all fifteen houses, every difficulty, the challenges</small></button></div>` : ''}
+    <div id="titlerank" style="margin-top:18px">${rankBox()}</div>
     <div class="foot"><button onclick="openSaves()">Saved games</button><button onclick="openHelp()">How to play</button><button onclick="openSettings()">Settings</button><span>Tap anywhere for sound</span></div>
-    <p class="ctr" style="color:#e9d9ae;font-size:13px;letter-spacing:.06em;margin-top:10px;text-shadow:0 1px 2px #000">Version ${APP_VERSION}</p></div>`;
+    <p class="ctr" style="color:#e9d9ae;font-size:13px;letter-spacing:.06em;margin-top:10px;text-shadow:0 1px 2px #000">Version ${APP_VERSION}</p>`);
+}
+// a kingdom's houses, on their own screen, with the way back to the kingdoms at the top
+function showHouses() {
+  const card = f => `<div class="fcard${houseLocked(f.id) ? ' locked' : ''}" style="--c:${f.color}" onclick="openFaction('${f.id}')">${houseLocked(f.id) ? `<span class="lockb">${ico('lock')}Full game</span>` : STORE.on && !fullGame() ? '<span class="lockb free">Free</span>' : ''}${shield(f.id, 46)}<div style="min-width:0"><h3>${f.name}</h3><div class="r">${f.title} ${f.pname}</div><div class="b">${f.blurb}</div><div class="tr">${ico('star')}<span>${f.trait}</span></div></div></div>`;
+  titleShell(`<div class="hbar"><button class="btn" onclick="sfx('click');showTitle()"><span class="lbl">${ico('back')}Kingdoms</span></button>${anySlot() ? `<button class="btn" onclick="openSaves()"><span class="lbl">${ico('chest')}Saved games</span></button>` : ''}</div>
+    <div class="hero small"><div class="ad">ANNO DOMINI ${SC.date.roman}</div><h1 class="gild">${esc(SC.name)}</h1><div class="gsub">${esc(SC.sub)}</div></div>
+    <p class="lead">${SC.intro.lead}</p>
+    <h2>Choose your house</h2>
+    <p class="ctr" style="color:#d9c9a3;font-style:italic;margin:-4px 0 6px">Tap a house to read about it and raise its banner.</p>
+    ${SC.groups.map(([h, ids]) => `<h2>${h}</h2><div class="facs">${FACTIONS.filter(f => ids ? ids.includes(f.id) : !SC.groups.some(g => g[1] && g[1].includes(f.id))).map(card).join('')}</div>`).join('')}
+    ${challengeBox()}
+    <p class="ctr" style="color:#d9c9a3;font-style:italic;margin-top:18px">New games: ${GOALS[setGoal()].n.toLowerCase()} · ${DIFF[SET.diff || 'gentle'].n.toLowerCase()} rivals · change them on a house's page</p>
+    <div class="row ctr" style="margin-top:14px"><button class="btn" onclick="sfx('click');showTitle()"><span class="lbl">${ico('back')}Back to the kingdoms</span></button></div>`);
 }
 function diffSeg() {
   const cur = SET.diff || 'gentle';
