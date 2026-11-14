@@ -724,3 +724,11 @@ body.nomotion #title .tbg, body.nomotion #title .hcrown .glint, body.nomotion #t
 #tutor.new { animation: cardin .3s, tutglow 1.2s ease-in-out 3; }
 @keyframes tutglow { 0%, 100% { box-shadow: 0 6px 20px #0009, 0 0 0 0 #8fb0ffcc; } 50% { box-shadow: 0 6px 20px #0009, 0 0 0 12px #8fb0ff00; } }
 @media (prefers-reduced-motion: reduce) { .tutcard.fresh, #tutor.new { animation: none; } }
+
+/* the guide: a Next or action button inside its card, and the siege lesson over the catapult controls */
+#tutor .tgow { margin-top: 8px; }
+#tutor .tgo { background: var(--gold2, #e2b33c); color: #2a1d12; border: 0; font-weight: 700; padding: 6px 14px; border-radius: 8px; }
+.ctguide { display: flex; gap: 10px; align-items: flex-start; background: #23407af2; color: #eaf0ff; border: 1px solid #8fb0ff; border-radius: 12px; padding: 9px 12px; margin-top: 8px; font-size: 14.5px; line-height: 1.35; text-align: left; animation: tutglow 1.2s ease-in-out 2; }
+.ctguide .tn { font-family: var(--head); font-size: 12px; color: var(--gold3); flex: none; padding-top: 2px; }
+.ctguide b { font-family: var(--head); font-size: 13.5px; letter-spacing: .04em; display: block; color: #fff; }
+.ctbar .ammo .btn.hint { outline: 3px solid #8fb0ff; outline-offset: 1px; animation: tutglow 1.2s ease-in-out infinite; }

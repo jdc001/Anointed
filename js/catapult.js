@@ -92,6 +92,7 @@ function openCatapult(p) {
   setMusic('siege');
   showModal(`<div class="cthud"><div class="ct"><div class="v" id="ct-shots"></div><div class="k">Shots</div></div><div class="ct"><div class="v" id="ct-walls"></div><div class="k">${ocols ? 'Outer · inner' : 'Walls'}</div></div><div class="ct"><div class="v" id="ct-def"></div><div class="k">Defenders</div></div><div class="ct"><div class="v" id="ct-wind"></div><div class="k">Wind</div></div></div>
     <canvas id="ctc"></canvas>
+    ${G.tut && TUT[G.tut.i] && TUT[G.tut.i].id === 'bombard' ? '<div id="ctguide" class="ctguide"></div>' : ''}
     <div class="ctbar"><div id="ctmsg"></div>
       <div class="ammo"${A.gf > 0 ? ' style="grid-template-columns:repeat(4,1fr)"' : ''}>${AMMO.filter(([id]) => id !== 'greek' || A.gf > 0).map(([id, n, i], k) => `<button class="btn sm${k === 0 ? ' on' : ''}" data-am="${id}"><span class="lbl">${ico(i)}</span><small>${n}</small><small class="amn" id="am-${id}"></small></button>`).join('')}</div>
       <button class="btn" style="flex:1" id="ct-auto" onclick="ctAuto()"><span class="lbl">${ico('cat')}Fire the rest</span><small>quick volley</small></button>
@@ -155,7 +156,7 @@ function openCatapult(p) {
       if (!(A.gf > 0)) { CT.msg = 'No Greek fire left. Buy jars on the Raise tab of a county where the army stands.'; CT.ammo = 'stone'; $$('[data-am]').forEach(x => x.classList.toggle('on', x.dataset.am === 'stone')); sfx('miss'); return; }
       A.gf--;
       // a third of the time the naphtha splashes back on the throwing arm, and the catapult burns
-      if (Math.random() < 1 / 3) { const share = Math.ceil(CT.shots / Math.max(1, A.cat)); A.cat = Math.max(0, A.cat - 1); CT.shots = A.cat ? Math.max(0, CT.shots - share) : 1; CT.lostCat = (CT.lostCat || 0) + 1; ctBoom(112, GY - 64, 0.7); CT.fires.push({ x: 112, y: GY - 30, t: 5 }); CT.burnMsg = true; sfx('fire'); buzz(60); }
+      if (!CT.lesson && Math.random() < 1 / 3) { const share = Math.ceil(CT.shots / Math.max(1, A.cat)); A.cat = Math.max(0, A.cat - 1); CT.shots = A.cat ? Math.max(0, CT.shots - share) : 1; CT.lostCat = (CT.lostCat || 0) + 1; ctBoom(112, GY - 64, 0.7); CT.fires.push({ x: 112, y: GY - 30, t: 5 }); CT.burnMsg = true; sfx('fire'); buzz(60); }
     }
     const pool = CT.ammo === 'rats' || CT.ammo === 'giant' ? 'cages' : null;
     if (pool) { if (CT[pool] <= 0) { CT.msg = pool === 'pots' ? 'No fire pots left. Stones are all you have.' : 'No cages of rats left. Stones are all you have.'; CT.ammo = 'stone'; $$('[data-am]').forEach(x => x.classList.toggle('on', x.dataset.am === 'stone')); sfx('miss'); return; } CT[pool]--; }
@@ -168,8 +169,29 @@ function openCatapult(p) {
     else CT.projs.push(mk(v.vx, v.vy, 7));
     CT.shots--; sfx('launch'); buzz(20);
     if (CT.burnMsg) { CT.burnMsg = false; CT.msg = `The jar flies, but naphtha splashes the throwing arm: a catapult burns! ${A.cat ? `${A.cat} left.` : 'This was the last one.'}`; }
+    if (CT.lesson) ctLessonShot(CT.ammo);
   };
+  // the guided campaign: a lesson in every kind of shot, with a few spare shots so there are enough for all of them
+  if ($('#ctguide')) { CT.lesson = { i: 0 }; CT.shots += 4; CT.cages = Math.max(CT.cages, 2); ctLessonDraw(); }
   const scene = CT; requestAnimationFrame(t => ctFrame(t, scene));
+}
+// ---- the siege lesson ----
+const CT_LESSON = [
+  { am: 'stone', t: 'One heavy stone', b: 'Tap Stone, then drag back from your catapult and let go, aiming at the wall. The harder you pull, the further it flies; mind the wind. One heavy stone smashes a deep section of any wall, wood or stone: it is your wall-breaker.' },
+  { am: 'triple', t: 'Three light stones', b: 'Now tap 3 stones and throw. The small stones scatter wider: they tear through a wooden palisade, but only chip stone walls and mostly bounce off great walls. Use them on wood, the heavy stone on stone.' },
+  { am: 'oil', t: 'A pot of flaming oil', b: 'Tap Flaming oil and throw it over the walls. It bursts among the defenders and burns the men where it lands. Standing walls shelter them, so oil does most once the walls are low.' },
+  { am: 'oil3', t: 'Three small pots', b: 'Tap 3 flaming oil. Three small pots spread the fire over more of the castle but burn fewer men in each place. Each pot also does a little less than the last, as the defenders ready sand and water.' },
+  { am: 'rats', t: 'A swarm of plague rats', b: 'Tap Plague rats. A cage of rats bursts over the walls and the swarm runs about biting the garrison as long as the bombardment lasts, and may start a plague inside. Cages are scarce: one per catapult, and one more.' },
+  { am: 'giant', t: 'The giant rat', b: 'Tap Giant plague rat. One huge rat instead of a swarm: slower to spread, but it bites harder and for longer. A cage holds one or the other.' },
+  { am: 'greek', t: 'Greek fire', b: 'Last, tap Greek fire. Sealed jars of Byzantine naphtha: against a wall it brings down a whole stretch and the men on it; thrown over, it burns about a third of the garrison, and water only spreads it. Each throw usually has a one-in-three chance of setting your own catapult alight. Not this once.' },
+  { am: null, t: 'That is every shot', b: 'Use the shots you have left as you like, or tap Fire the rest for a quick volley. Then Finish bombardment, or Storm the walls to assault at once. Every turn your army stays, the siege goes on: bombard again, starve them, or storm when the odds are good.' },
+];
+function ctLessonShot(am) { const L = CT.lesson, st = CT_LESSON[L.i]; if (st && st.am && st.am === am) { L.i++; sfx('coin'); } ctLessonDraw(); }
+function ctLessonDraw() {
+  const el = $('#ctguide'); if (!el || !CT || !CT.lesson) return;
+  const i = CT.lesson.i, st = CT_LESSON[i], n = CT_LESSON.length - 1;
+  el.innerHTML = `<div class="tn">${Math.min(i + 1, n)}/${n}</div><div class="tb"><b>${esc(st.t)}</b>${esc(st.b)}</div>`;
+  $$('[data-am]').forEach(b => b.classList.toggle('hint', !!st.am && b.dataset.am === st.am));
 }
 function launchVec(d) {
   let dx = d.s.x - d.c.x, dy = d.s.y - d.c.y;

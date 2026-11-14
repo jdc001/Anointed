@@ -1,4 +1,4 @@
-# Anointed, v6.49
+# Anointed, v6.50
 
 Play it at https://jdc001.github.io/crown-of-the-franks/ (open in Safari, then Share → Add to Home Screen).
 

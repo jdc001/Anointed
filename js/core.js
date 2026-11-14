@@ -129,13 +129,17 @@ function bonus(fid) {
     hp: owned(fid).some(p => p.b.forge) ? 0.15 : 0, cav: owned(fid).some(p => p.b.stables) ? 0.25 : 0 };
 }
 const truce = () => G.turn < TRUCE;
+// the guided campaign gives a few things away, once, and says so
+const tutFree = (fid, k) => !!(G && G.tut && G.tut.free && G.tut.free[k] > 0 && fid === G.player);
+const tutSpend = (fid, k) => { if (tutFree(fid, k)) G.tut.free[k]--; };
 function unitCost(fid, t) {
+  if (tutFree(fid, t)) return 0;
   const c = TR(fid).cost; if (c && c[t]) return c[t];
   return UNIT[t].c;
 }
 // Greek fire: sealed jars of Byzantine naphtha. Venetian traders sell them dear; Theophylact the Greek can make them.
 const GF_MAX = 3;
-const gfCost = (fid, a) => armyGen(fid, a) && armyGen(fid, a).siege ? 25 : TR(fid).gf || 60;
+const gfCost = (fid, a) => tutFree(fid, 'gf') ? 0 : armyGen(fid, a) && armyGen(fid, a).siege ? 25 : TR(fid).gf || 60;
 const catShots = (fid, a) => 3 + (a && armyGen(fid, a) && armyGen(fid, a).siege ? 1 : 0);
 function mods(fid) { if (!fid) return 0; const F = G.fac[fid]; return (F.bless > 0 ? 1 : 0) - (F.excom > 0 ? 1 : 0); }
 // Rome is beyond the map: its cardinals answer to no prince
@@ -387,7 +391,7 @@ function nearestHeld(fid, from) {
 const canReachAny = (p, fid) => usableArmies(fid).some(a => strikeFrom(fid, a, p));
 function canReach(p, fid) { return canReachAny(p, fid); }
 const canRaiseInto = (fid, a) => armyUsable(fid, a) && !!a.loc && !a.siege && P(a.loc).owner === fid;
-function raise(fid, t, a) { const F = G.fac[fid], c = unitCost(fid, t); if (!canRaiseInto(fid, a) || F.gold < c || t === 'bishop') return false; F.gold -= c; a[t]++; return true; }
+function raise(fid, t, a) { const F = G.fac[fid], c = unitCost(fid, t); if (!canRaiseInto(fid, a) || F.gold < c || t === 'bishop') return false; F.gold -= c; a[t]++; tutSpend(fid, t); return true; }
 
 // ================= LOG =================
 function note(text) { G.log.unshift({ d: dateStr(G.turn), text }); if (G.log.length > 200) G.log.pop(); }
@@ -957,9 +961,9 @@ const POPE = {
   truce: { c: 60, n: 'Truce of God', d: 'Neither of you may attack the other for 4 turns.', who: 'house' },
   interdict: { c: 45, n: 'Interdict', d: 'The churches close: the county pays nothing for 4 turns.', who: 'county' },
 };
-const popeCost = (fid, a) => Math.ceil(POPE[a].c * (popeIsYours(fid) || hasRome(fid) ? 0.5 : 1));
+const popeCost = (fid, a) => tutFree(fid, a) ? 0 : Math.ceil(POPE[a].c * (popeIsYours(fid) || hasRome(fid) ? 0.5 : 1));
 function popeChance(fid, act, target) {
-  if (popeIsYours(fid)) return 1;
+  if (popeIsYours(fid) || tutFree(fid, act)) return 1;
   const inf = influence(fid) + 0.02 * Math.min(5, G.fac[fid].bishops) + (typeof popeMod === 'function' ? popeMod(fid) : 0);
   let c;
   if (act === 'excom') c = 0.25 + inf - 0.8 * influence(target) - (hasRome(target) ? 0.3 : 0);
@@ -974,7 +978,7 @@ function papal(fid, act, target) {
   if (act === 'merc' && !usableArmies(fid).length) return null;
   if (act === 'absolve' && !F.excom) return null;
   F.gold -= c; F.popeUsed = true;
-  const ok = Math.random() < popeChance(fid, act, target);
+  const ok = Math.random() < popeChance(fid, act, target); tutSpend(fid, act);
   const nm = FAC(fid).name;
   if (!ok) return `The Pope will not grant ${nm}'s petition (${POPE[act].n.toLowerCase()}). The gifts are kept all the same.`;
   switch (act) {

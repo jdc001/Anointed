@@ -216,7 +216,7 @@ const GOODS = WARES.map(w => [w.id]);
 const FAIR_DAYS = 3;
 const yearOf = t => SC.date.y0 + Math.floor((t + SC.date.yOff) / 4);
 const markets = () => owned(me()).filter(p => p.b.market).length;
-const fairOpen = () => !!G && !G.over && G.turn >= 1 && SEASONS[(G.turn + SC.date.s0) % 4] === 'Summer' && G.fairYear !== yearOf(G.turn) && (markets() > 0 || !!TR(me()).fair);
+const fairOpen = () => !!G && !G.over && G.fairYear !== yearOf(G.turn) && (markets() > 0 || !!TR(me()).fair) && ((G.turn >= 1 && SEASONS[(G.turn + SC.date.s0) % 4] === 'Summer') || !!(G.tut && G.tut.fairNow));
 // what the realm brings: lots of each ware (one per building level) and the grade of the best of them
 function fairStock() {
   const out = [];
