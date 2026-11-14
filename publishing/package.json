@@ -1,6 +1,6 @@
 {
   "name": "anointed-app",
-  "version": "6.3.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "copy": "rm -rf www && mkdir www && cp -R ../index.html ../css ../js ../icon-180.png ../icon-512.png ../icon.svg ../manifest.webmanifest ../service-worker.js www/",

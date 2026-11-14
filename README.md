@@ -1,4 +1,6 @@
-# Anointed, v6.50
+# Anointed 1.0
+
+Version 1.0 is the first release under the Anointed name (it was v6.50 in development). The notes below keep the development history.
 
 Play it at https://jdc001.github.io/Anointed/ (open in Safari, then Share → Add to Home Screen).
 
