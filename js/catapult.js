@@ -87,14 +87,16 @@ function openCatapult(p) {
   const D0 = defenders(p), ground0 = D0.foot + D0.militia + D0.cav, wall0 = D0.bow + D0.foot;
   for (let i = 0; i < nFoot; i++) crowd.push({ x: 660 + Math.random() * 120, v: (Math.random() < .5 ? -1 : 1) * (8 + Math.random() * 14), ph: Math.random() * 6, t: i < p.gar.cav ? 'cav' : i % 4 === 0 ? 'militia' : 'foot' });
   const clouds = Array.from({ length: 5 }, (_, i) => [i * 170 + Math.random() * 80, 30 + Math.random() * 80, 30 + Math.random() * 40, 6 + Math.random() * 6]);
-  CT = { p, h, cols, rows, lv, wx, oh, ocols, orows, ox, o0: p.outer ?? 100, ground0, wall0, shots: A.cat * catShots(me(), A), ammo: 'stone', wind: Math.round((Math.random() * 2 - 1) * 70), projs: [], drag: null, parts: [], fires: [], arrows: [], crowd, clouds, t: 0,
+  CT = { p, h, cols, rows, lv, wx, oh, ocols, orows, ox, o0: p.outer ?? 100, ground0, wall0, shots: A.cat * catShots(me(), A), shots0: A.cat * catShots(me(), A), ammo: 'stone', speed: 1, wind: Math.round((Math.random() * 2 - 1) * 70), projs: [], drag: null, parts: [], fires: [], arrows: [], crowd, clouds, t: 0,
     msg: 'Drag anywhere on the field and release to fire. Pull further for more power.', killed: 0, plague: 0, rats: [], cages: A.cat + 1, w0: p.walls, last: 0, dead: false, color: p.owner ? FAC(p.owner).color : '#d8cba5' };
   setMusic('siege');
   showModal(`<div class="cthud"><div class="ct"><div class="v" id="ct-shots"></div><div class="k">Shots</div></div><div class="ct"><div class="v" id="ct-walls"></div><div class="k">${ocols ? 'Outer · inner' : 'Walls'}</div></div><div class="ct"><div class="v" id="ct-def"></div><div class="k">Defenders</div></div><div class="ct"><div class="v" id="ct-wind"></div><div class="k">Wind</div></div></div>
     <canvas id="ctc"></canvas>
     <div class="ctbar"><div id="ctmsg"></div>
       <div class="ammo"${A.gf > 0 ? ' style="grid-template-columns:repeat(4,1fr)"' : ''}>${AMMO.filter(([id]) => id !== 'greek' || A.gf > 0).map(([id, n, i], k) => `<button class="btn sm${k === 0 ? ' on' : ''}" data-am="${id}"><span class="lbl">${ico(i)}</span><small>${n}</small><small class="amn" id="am-${id}"></small></button>`).join('')}</div>
-      <button class="btn gold" style="flex:1" onclick="finishCatapult()"><span class="lbl">${ico('check')}Finish bombardment</span></button></div>
+      <button class="btn" style="flex:1" id="ct-auto" onclick="ctAuto()"><span class="lbl">${ico('cat')}Fire the rest</span><small>quick volley</small></button>
+      <button class="btn gold" style="flex:1" onclick="finishCatapult()"><span class="lbl">${ico('check')}Finish bombardment</span></button>
+      ${A.stormed ? '' : `<button class="btn red" style="flex:1" onclick="ctStorm()"><span class="lbl">${ico('swords')}Storm the walls</span></button>`}</div>
     <p class="sub">${CASTLE_N[lv]}${p.b.moat ? ' behind a moat' : ''}. One heavy stone smashes a deep section of any wall. 3 light stones scatter wider and tear through wood, but only chip stone and mostly bounce off great walls. Flaming oil works the same way: one big pot burns more men where it lands, 3 small pots spread the fire wider. Standing walls shelter the defenders from fire, and each pot does less than the last, so break the walls first. ${A.gf > 0 ? 'Greek fire brings down a whole stretch of wall, or, thrown over it, burns about a third of the garrison, but each throw has a one-in-three chance of setting the catapult alight. ' : ''}Rats are scarcer: you have one cage for each catapult, and one more; a cage holds a swarm or a single giant rat. An army sheltering in the castle suffers from fire and rats along with the garrison.</p>`, 'wide ctcard');
   // give the canvas its true shape before measuring; a bare canvas is 300 by 150 and would be measured too short
   { const c0 = $('#ctc'); c0.width = CW; c0.height = CH; }
@@ -141,13 +143,15 @@ function openCatapult(p) {
   const fit = { pt: e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * CW / r.width, y: (e.clientY - r.top) * CH / r.height }; } };
   $$('[data-am]').forEach(b => b.onclick = () => { CT.ammo = b.dataset.am; $$('[data-am]').forEach(x => x.classList.toggle('on', x === b)); sfx('click'); buzz(6); });
   const pt = fit.pt;
-  cv.onpointerdown = e => { if (!CT || CT.projs.length || CT.shots <= 0) return; cv.setPointerCapture(e.pointerId); const q = pt(e); CT.drag = { s: q, c: q }; };
+  cv.onpointerdown = e => { if (!CT || CT.auto || CT.projs.length || CT.shots <= 0) return; cv.setPointerCapture(e.pointerId); const q = pt(e); CT.drag = { s: q, c: q }; };
   cv.onpointermove = e => { if (CT && CT.drag) CT.drag.c = pt(e); };
   cv.onpointerup = () => {
     if (!CT || !CT.drag) return;
     const d = CT.drag; CT.drag = null;
-    const v = launchVec(d); if (!v) return;
-    if (CT.ammo === 'greek') {
+    if (CT.auto) return;
+    const v = launchVec(d); if (v) CT.fire(v);
+  };
+  CT.fire = v => {    if (CT.ammo === 'greek') {
       if (!(A.gf > 0)) { CT.msg = 'No Greek fire left. Buy jars on the Raise tab of a county where the army stands.'; CT.ammo = 'stone'; $$('[data-am]').forEach(x => x.classList.toggle('on', x.dataset.am === 'stone')); sfx('miss'); return; }
       A.gf--;
       // a third of the time the naphtha splashes back on the throwing arm, and the catapult burns
@@ -506,8 +510,55 @@ function drawRat(x, cx, cy, sc, dir, ph, flying, tilt = 0) {
 function ctFrame(ts, scene) {
   if (!CT || CT !== scene || CT.dead) return;
   const dt = Math.min(0.033, CT.last ? (ts - CT.last) / 1000 : 0.016); CT.last = ts;
-  ctUpdate(dt); ctDraw();
+  // the quick volley runs the same physics in smaller steps, three times as fast
+  for (let i = 0; i < CT.speed; i++) { ctUpdate(dt); if (!CT || CT !== scene) return; }
+  if (CT.auto) ctAutoTick(dt * CT.speed);
+  if (!CT || CT !== scene) return;
+  ctDraw();
   requestAnimationFrame(t => ctFrame(t, scene));
+}
+// ---- the quick volley: the engineers aim and loose every remaining shot, three times as fast ----
+// they aim the way a player would: at the outer wall first, then the highest stretch of the inner wall, then,
+// once the walls are low, over them into the bailey; each shot strays a little, so some miss
+function ctAimPoint() {
+  const oc = CT.oh.map((v, i) => [v, i]).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0])[0];
+  if (oc) return { x: CT.ox + oc[1] * CBW + CBW / 2, y: GY - oc[0] * CBH + CBH * 0.6 };
+  const integ = CT.h.reduce((s, v) => s + v, 0) / (CT.cols * CT.rows);
+  const wc = CT.h.map((v, i) => [v, i]).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0])[0];
+  if (wc && integ > 0.34 && CT.p.b.castle && !CT.p.ruined) return { x: CT.wx + wc[1] * CBW + CBW / 2, y: GY - wc[0] * CBH + CBH * 0.6 };
+  return { x: 712 + Math.random() * 60, y: GY - 6 };
+}
+function ctAimVec(t) {
+  const T = 1.45 + Math.random() * 0.2, x0 = 112, y0 = 300;
+  const tx = t.x + (Math.random() - .5) * 26, ty = t.y + (Math.random() - .5) * 18;
+  return { vx: (tx - x0 - 0.5 * CT.wind * T * T) / T, vy: (ty - y0 - 0.5 * GRAV * T * T) / T };
+}
+function ctAuto() {
+  if (!CT || CT.auto) return;
+  if (CT.shots <= 0) { CT.msg = 'Out of ammunition.'; return; }
+  if (!['stone', 'triple', 'oil', 'oil3'].includes(CT.ammo)) { CT.ammo = 'stone'; $$('[data-am]').forEach(x => x.classList.toggle('on', x.dataset.am === 'stone')); }
+  CT.auto = true; CT.speed = 3; CT.autoCd = 0.2; CT.drag = null;
+  const b = $('#ct-auto'); if (b) b.disabled = true;
+  CT.msg = `The engineers loose the remaining ${CT.shots} shot${CT.shots === 1 ? '' : 's'}.`; sfx('click');
+}
+function ctAutoTick(dt) {
+  if (CT.projs.length) return;
+  CT.autoCd -= dt; if (CT.autoCd > 0) return;
+  if (CT.shots > 0 && !CT.thenStorm) { CT.fire(ctAimVec(ctAimPoint())); CT.autoCd = 0.35; return; }
+  // all shots spent and the last one has landed: let the dust settle, then report (or go straight to the assault)
+  if (CT.autoDone == null) { CT.autoDone = CT.thenStorm ? 0.5 : 1.2; if (!CT.thenStorm) CT.msg = 'The last shot lands.'; return; }
+  CT.autoDone -= dt; if (CT.autoDone > 0) return;
+  CT.auto = false; CT.speed = 1;
+  if (CT.thenStorm) ctStorm(); else finishCatapult();
+}
+// storm from the siege lines: whatever has been fired counts, then the assault screen opens
+function ctStorm() {
+  if (!CT) return;
+  if (CT.projs.length) { CT.thenStorm = true; CT.auto = true; CT.speed = 3; CT.autoCd = 0; CT.msg = 'The last shot is in the air. The men form up for the assault.'; return; }
+  const pid = CT.p.id, fired = CT.shots < CT.shots0 || CT.killed || CT.lostCat;
+  finishCatapult(!fired);
+  const A = myA(), p = P(pid);
+  if (A && A.siege === pid && !A.stormed && armySize(A) > 0) openPreBattle('assault', pid);
 }
 // bombard without the catapult scene: each shot has the same chance as the computer's engineers
 function autoBombard(A, p) {
@@ -523,7 +574,7 @@ function autoBombard(A, p) {
   const txt = `Bombardment of ${p.name}: walls ${w0}% → ${p.ruined ? 'ruined' : p.walls + '%'}, ${kl} defenders killed${pl ? ', plague sown inside' : ''}.`;
   note(txt); toast(`Walls ${w0}% → ${p.ruined ? 'ruined' : p.walls + '%'} · ${kl} killed`, 'cat'); sfx('wall');
 }
-function finishCatapult() {
+function finishCatapult(unfired) {
   if (!CT) return;
   ratsFinish();
   const c = CT, p = c.p, A = myA();
@@ -531,6 +582,7 @@ function finishCatapult() {
   const w = Math.round(c.h.reduce((s, v) => s + v, 0) / (c.cols * c.rows) * 100);
   if (c.ocols) p.outer = Math.round(c.oh.reduce((s, v) => s + v, 0) / (c.ocols * c.orows) * 100);
   p.walls = Math.round(w); ruinIfBroken(p);
+  if (unfired) { c.dead = true; releaseScene(c); CT = null; closeModal(); save(); render(); return; }
   A.bombarded = true; A.acted = true;
   note(`Bombardment of ${p.name}: walls ${c.w0}% → ${p.ruined ? 'ruined' : p.walls + '%'}, ${c.killed} defenders killed${c.plague ? ', plague sown inside' : ''}.`);
   c.dead = true; releaseScene(c); CT = null; closeModal(); save(); render();
