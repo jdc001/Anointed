@@ -579,6 +579,8 @@ function fixSieges() {
   syncCrown();
   if (G.lastGrudge !== G.turn) { G.lastGrudge = G.turn; grudgeTick(); }
   for (const o in G.armies) if (G.fac[o] && G.fac[o].alive) for (const a of G.armies[o]) if (a.loc && !a.siege && !passable(o, a.loc)) a.loc = nearestHeld(o, a.loc) || homeOf(o);
+  // an army whose siege was left behind when it was moved (a fallen seat, a new general) is not besieging anything
+  for (const o in G.armies) for (const a of G.armies[o]) if (a.siege && a.loc !== a.siege) a.siege = null;
   for (const o in G.armies) for (const a of G.armies[o]) if (a.siege) { const q = P(a.siege); if (!q || holds(o, q.id) || (q.owner && atPeace(o, q.owner))) { a.siege = null; if (q && holds(o, q.id)) a.loc = q.id; } }
 }
 function capture(p, fid) {

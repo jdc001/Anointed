@@ -75,7 +75,8 @@ function aiTurn(fid) {
   }
   aiDefendSeat(fid);
   if (G.over) return;
-  aiBuild(fid); aiGenerals(fid); aiRecruit(fid); aiChurch(fid); aiDiplo(fid);
+  // a power outside the game's houses (Byzantium) keeps no court: its men come only from its own events
+  if (SC.passive && SC.passive(fid)) aiBuild(fid); else { aiBuild(fid); aiGenerals(fid); aiRecruit(fid); aiChurch(fid); aiDiplo(fid); }
   F.guard = aiPickGuard(fid);
   aiConcentrate(fid);
   F.struck = false;
@@ -376,6 +377,8 @@ function aiWar(fid, A) {
     else if (ambitious && goalCity) val *= 1 + 0.9 / (1 + (HOPS[goalCity][p.id] ?? 9));
     // (France only: the Empire's wrath in Lorraine. On the Empire map 'lo' is the Lombard south)
     if (MAP_ID === 'france' && p.r === 'lo' && !(G.start && (G.start[p.id] === fid || G.start[p.id] === 'charles'))) val *= 0.6;
+    // the princes fear the Greeks: their lands are taken only when they lie in the way
+    if (p.owner && SC.passive && SC.passive(p.owner)) val *= 0.4;
     if (s.dist) val *= 0.9;
     if (kin && G.turn < 30) val *= 0.6;
     if (leader && p.owner === leader) val *= 1.8;

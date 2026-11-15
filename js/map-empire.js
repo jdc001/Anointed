@@ -131,7 +131,7 @@ const PROV = [
   ['frisia', 'West Frisia', 4.85, 52.65, 'north', 0, 3, null, 0, 'Count Arnulf of West Frisia', 'de'],
   ['nijmegen', 'Nijmegen', 5.86, 51.8, '', 0, 4, null, 1, 'the Royal Reeve of Nijmegen', 'de'],
   ['brussels', 'Brussels', 4.35, 50.85, '', 0, 4, 'lorraine', 1, '', 'de'],
-  ['antwerp', 'Antwerp', 4.4, 51.25, 'north', 0, 4, null, 0, 'the Margrave of Antwerp', 'de'],
+  ['antwerp', 'Antwerp', 4.4, 51.25, 'north', 0, 4, 'lorraine', 0, '', 'de'],
   ['hainaut', 'Hainaut', 3.9, 50.4, '', 0, 4, null, 1, 'Count Reginar of Hainaut', 'de'],
   ['namur', 'Namur', 4.87, 50.4, '', 1, 4, null, 1, 'Count Albert of Namur', 'de'],
   ['verdun', 'Verdun', 5.38, 49.16, '', 0, 4, null, 1, 'Count Godfrey of Verdun', 'de'],
@@ -378,6 +378,7 @@ return {
   tick() { empireTick(); },
   // Byzantium sits still unless it is provoked: then the imperial fleet comes, and for a while it makes war
   idle: fid => fid === 'byzantium' && !(G.ev.byzWar > G.turn),
+  passive: fid => fid === 'byzantium',
   raider: {
     who: 'the Saracens of Sicily', title: 'The emir of Sicily sends his ships, and', tribute: 'tribute', every: 5, from: 4,
     targets: () => provList().filter(p => p.owner && !besiegerOf(p) && p.lat < 42.4 && p.seas.some(s => s === 'tyrrhenian' || s === 'ionian')),
@@ -442,11 +443,18 @@ function byzantineWatch() {
   const lost = held < E.byzHeld, besieged = owned('byzantium').some(p => besiegerOf(p));
   const big = alive().find(f => f !== 'byzantium' && south(f) >= 9);
   E.byzHeld = held;
-  if (E.byzWar > T || (E.byzNext || 0) > T) return;
-  if (!lost && !besieged && !(big && Math.random() < 0.35)) return;
+  // the themes keep their garrisons filled from the imperial treasury, Bari most of all
+  if (T % 2 === 0) for (const p of owned('byzantium')) { const floor = p.id === 'bari' ? 20 : 12; if (p.gar.foot < floor) { p.gar.foot += 2; p.gar.bow += 1; } }
   const A = lordArmy('byzantium'); if (!armyUsable('byzantium', A)) return;
+  // the war is over: the fleet sails home and the catepan keeps only his own guard
+  if (E.byzWar === T) { A.foot = Math.min(A.foot, 10); A.bow = Math.min(A.bow, 4); A.cav = Math.min(A.cav, 4); A.cat = 0; A.siege = null; A.loc = homeOf('byzantium'); note('The imperial fleet sails home from Bari.'); }
+  // already at war: a fresh loss brings more men, once in a while
+  if (E.byzWar > T) { if (lost && (E.byzTop || 0) <= T) { A.foot += 6; A.cav += 2; E.byzTop = T + 3; } return; }
+  // an attack on Greek land is answered, but not more than once a dozen turns; a rival's growing power, only now and then
+  if ((E.byzNext || 0) > T) return;
+  if (!lost && !besieged && !(big && Math.random() < 0.35)) return;
   A.foot += 18; A.bow += 8; A.cav += 8; A.cat += 2; A.gf = (A.gf || 0) + 2;
-  E.byzWar = T + 8; E.byzNext = T + 18;
+  E.byzWar = T + 8; E.byzNext = T + 14;
   const why = lost || besieged ? 'an attack on the Greek lands of Apulia' : `the growing power of ${FAC(big).name} in the south`;
   tell(G.player, 'The imperial fleet', `Angered by ${why}, the Emperor Basil sends a fleet to Bari. The catepan marches out with Varangians, Greek horse and pots of Greek fire.`);
 }

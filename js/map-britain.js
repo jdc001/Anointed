@@ -148,8 +148,8 @@ const PROV = [
   ['mull', 'Mull', -5.95, 56.45, 'atlantic', 1, 2, null, 0, 'the Lords of Islay', 'no'],
   ['bergen', 'Hordaland', 5.6, 60.35, 'north', 1, 6, 'norway', 1, '', 'no'],
   ['stavanger', 'Rogaland', 5.95, 58.95, 'north', 1, 5, 'norway', 0, '', 'no'],
-  ['sogn', 'Sogn', 6.3, 61.05, 'north', 1, 3, 'norway', 0, '', 'no'],
-  ['agder', 'Agder', 7.6, 58.3, 'north', 1, 4, 'norway', 0, '', 'no'],
+  ['sogn', 'Sogn', 6.3, 61.05, 'north', 1, 3, null, 0, 'Jarl Haakon of Sogn', 'no'],
+  ['agder', 'Agder', 7.6, 58.3, 'north', 1, 4, null, 0, 'the Agder chieftains', 'no'],
   // ---- Ireland ----
   ['ferns', 'Ferns', -6.55, 52.55, 'irish', 0, 5, 'leinster', 1, '', 'ir'],
   ['dublin', 'Dublin', -6.3, 53.35, 'irish', 0, 7, 'leinster', 1, '', 'ir'],
