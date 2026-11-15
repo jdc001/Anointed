@@ -254,6 +254,8 @@ return {
     span: 'From Flanders to Barcelona', crowned: 'crowned at Reims', church: 'the archbishop of Reims',
     rules: 'For the first time in a century, a king of the Franks rules as well as reigns.',
   },
+  // the win: not only crowned, but master of the kingdom in fact
+  win: { goal: 'Master of the Franks' },
   coin: 'Deniers',
   houseOf: f => f.realm === 'France' ? 'A house of the kingdom of the Franks' : 'A house of the kingdom of Arles',
   groups: [['The north', NORTH], ['The south', null]],

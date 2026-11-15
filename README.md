@@ -1,4 +1,10 @@
-# Anointed 1.3.3
+# Anointed 1.4.0
+
+## 1.4.0 — King of the Romans, and Emperor
+- **The Empire, 1002 has two steps.** Being anointed at Mainz and enthroned at Aachen (8 counties of the kingdom and the fee) makes you **King of the Romans**, with the king's bonuses. The win is **Emperor of the Romans**: Mainz, Aachen and Rome, two-fifths of the German kingdom, and no rival over a quarter. Once anointed, Mainz and Aachen are yours by right; Rome counts if you hold it, if an ally holds it, or if the Pope is your man (more than half the college of cardinals). The victory is the imperial coronation in St Peter's.
+- France and 1066 name their win apart from the coronation: **Master of the Franks** and **Master of England**.
+- The medal *Crowned in Rome* became *An Italian Emperor* (win the empire with an Italian or Lombard house), since every imperial win now involves Rome.
+- The computer houses go for the nearest seat they lack, and a house one seat short sends its strongest host to take it.
 
 ## 1.3.3
 - Each map counts its silver in its own coin: deniers in France, pence in England, pfennigs in the Empire. The sign stays d, from the Latin denarius, as English pence were written until 1971.

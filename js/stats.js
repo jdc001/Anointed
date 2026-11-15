@@ -179,8 +179,8 @@ const TROPHIES = [
   { id: 'fjords', n: 'Lord of the Fjords', d: "In 1066: hold all four counties of Norway at the end of a game, playing a house that did not start with them.", pts: 40, map: 'britain', test: S => S.map === 'britain' && S.f && S.f.fjords },
   { id: 'channel', n: 'The Conquest Reversed', d: 'In 1066: as an English or Welsh house, take Rouen.', pts: 45, map: 'britain', test: S => S.map === 'britain' && S.f && S.f.rouen },
   // ---- the Empire, 1002 ----
-  { id: 'rome', n: 'Crowned in Rome', d: 'In 1002: win holding Rome, where emperors are crowned.', pts: 50, map: 'empire', test: S => S.won && S.map === 'empire' && S.f && S.f.rome },
-  { id: 'ironcrown', n: 'Two Crowns', d: 'In 1002: win holding Pavia, the seat of the kings of Italy, as well as Mainz and Aachen.', pts: 45, map: 'empire', test: S => S.won && S.map === 'empire' && S.f && S.f.pavia },
+  { id: 'rome', n: 'An Italian Emperor', d: 'In 1002: win the imperial crown with an Italian or Lombard house.', pts: 60, map: 'empire', test: S => S.won && S.map === 'empire' && ['ivrea', 'canossa', 'crescentii', 'benevento', 'salerno'].includes(S.house) },
+  { id: 'ironcrown', n: 'Two Crowns', d: 'In 1002: win the empire holding Pavia, the seat of the kings of Italy, as well.', pts: 45, map: 'empire', test: S => S.won && S.map === 'empire' && S.f && S.f.pavia },
   { id: 'greeks', n: 'Bane of the Greeks', d: 'In 1002: take a county from Byzantium.', pts: 35, map: 'empire', test: S => S.map === 'empire' && (S.m.byz || 0) >= 1 },
   { id: 'elbe', n: 'Across the Elbe', d: 'In 1002: hold Brandenburg, Havelberg, Rethra, Mecklenburg and Rügen at the end of a game.', pts: 35, map: 'empire', test: S => S.map === 'empire' && S.f && S.f.elbe },
   { id: 'veteran', n: 'Veteran', d: 'Finish ten games, won or lost.', pts: 30, test: (S, P) => P.games >= 10 },

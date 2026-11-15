@@ -263,6 +263,7 @@ return {
   },
   founder: 'King Alfred',
   pnames: ['Edgar', 'Edmund', 'Leofric', 'Siward', 'Godric', 'Ælfric', 'Wulfstan', 'Osgod', 'Thurkill', 'Brand', 'Donnchad', 'Gruffydd', 'Eadric', 'Uhtred', 'Cospatrick'],
+  win: { goal: 'Master of England' },
   coin: 'Pence',
   houseOf: f => f.houseTxt,
   groups: [['The English', ['wessex', 'eastanglia', 'mercia', 'northumbria']], ['The Normans', ['normandy', 'boulogne']], ['The Northmen', ['norway', 'orkney', 'isles']], ['The Scots and the Welsh', ['scotland', 'gwynedd']], ['The Irish', null]],

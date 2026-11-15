@@ -740,15 +740,19 @@ function eliminate(lo, win, quiet) {
 const frenchHeld = fid => FRANCE.filter(id => holds(fid, id)).length;
 const empireHeld = fid => EMPIRE.filter(id => holds(fid, id)).length;
 // ================= VICTORY =================
+// the victory as the map tells it: the crown's words, unless the map's win has its own (the Empire's emperor)
+const WIN = Object.assign({}, SC.crown, SC.win || {});
+const andList = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
 const GOALS = {
-  king: { n: SC.crown.title, s: 'The main game', d: `Hold ${SC.crown.needs('', false).map(id => SC.PROV.find(r => r[0] === id)[1]).join(' and ')}, with half of the kingdom's counties in your own hands and no rival house holding more than a quarter. Or break every rival.` },
+  king: { n: WIN.goal || SC.crown.title, s: 'The main game', d: `Hold ${andList((SC.win && SC.win.seats ? SC.win.seats('') : SC.crown.needs('', false)).map(id => SC.PROV.find(r => r[0] === id)[1]))}, with ${(SC.domainShare || 0.5) === 0.5 ? 'half' : 'two-fifths'} of the kingdom's counties in your own hands and no rival house holding more than a quarter. Or break every rival.` },
   conquest: { n: 'Full conquest', s: 'Longest', d: 'Break every rival house, including rebels.' },
 };
 const goalId = () => (G && GOALS[G.goal]) ? G.goal : 'king';
 const wears = (fid, k = 'franks') => G.crowns[k] === fid && !!(G.coronated && G.coronated[k] === fid);
 const homageNeed = () => Math.min(alive().length - 1, Math.max(3, Math.ceil((alive().length - 1) * 2 / 3)));
 const domainNeed = () => Math.ceil(FRANCE.length * DOMAIN_SHARE);
-const DOMAIN_SHARE = 0.5;
+// half the kingdom, unless the map asks less (the Empire, whose win also needs Rome)
+const DOMAIN_SHARE = SC.domainShare || 0.5, SHARE_TXT = DOMAIN_SHARE === 0.5 ? 'half' : DOMAIN_SHARE === 0.4 ? 'two-fifths' : Math.round(DOMAIN_SHARE * 100) + '%';
 const domainHeld = fid => FRANCE.filter(id => P(id).owner === fid).length;
 // an undisputed crown: no rival house may still hold more than a quarter of the kingdom
 const RIVAL_SHARE = 0.25;
@@ -759,11 +763,14 @@ const undisputed = fid => alive().every(f => f === fid || domainHeld(f) <= rival
 const holdsCrownSeat = fid => crownNeeds(fid).every(id => P(id).owner === fid);
 // to win, a house must hold every place a king is made in (Reims and Paris, London and Winchester, Mainz and Aachen),
 // however great it is, with half the kingdom, undisputed
-const winSeats = fid => SC.crown.needs(fid, false);
-const holdsWinSeats = fid => winSeats(fid).every(id => P(id).owner === fid);
+const winSeats = fid => SC.win && SC.win.seats ? SC.win.seats(fid) : SC.crown.needs(fid, false);
+// a seat counts if you hold it; a map may let a seat be had another way (Rome: an ally holds it, or the Pope is yours)
+const seatHeld = (fid, id) => P(id).owner === fid || !!(SC.win && SC.win.alt && SC.win.alt(fid, id));
+const holdsWinSeats = fid => winSeats(fid).every(id => seatHeld(fid, id));
 function goalMet(fid) { return goalId() === 'king' && holdsWinSeats(fid) && alive().length > 1 && domainHeld(fid) >= domainNeed() && undisputed(fid); }
 function declareWinner(w) {
   G.over = true; G.winner = w; G.askWin = false;
+  if (WIN.emperor) FAC(w).emperor = true;
   // a victor who never paid for the rite is anointed now, as part of the victory: one ceremony, not two
   if (!wears(w)) { const old = king(); if (old && old !== w) { const od = FAC(old); od.kingOf = []; od.title = lostTitle(old); } G.crowns.franks = w; G.coronated.franks = w; const d = FAC(w); d.kingOf = ['franks']; d.title = 'King'; }
 }
@@ -933,7 +940,7 @@ function rebel(fid) {
 // When one house holds more than a quarter of the counties on the map, the other princes make common cause:
 // a truce among themselves and a war on the leader for twelve turns. The player is never pressed into it.
 // how near a house is to winning, 1 or more being there: its share of the kingdom it needs, and the crown cities it holds
-function winProgress(f) { const seats = winSeats(f); return domainHeld(f) / domainNeed() + 0.25 * seats.filter(id => P(id).owner === f).length / seats.length; }
+function winProgress(f) { const seats = winSeats(f); return domainHeld(f) / domainNeed() + 0.25 * seats.filter(id => seatHeld(f, id)).length / seats.length; }
 function maybeLeague() {
   if (G.turn - G.lastUnion < 20 || G.turn < TRUCE + 6) return;
   // the league forms against whoever is closest to the crown: half the kingdom and its crown cities, you included

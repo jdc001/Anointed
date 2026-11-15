@@ -290,10 +290,10 @@ function goalHtml(held) {
   if (g === 'king') {
     const crowned = wears(me()), dh = domainHeld(me()), dn = domainNeed(), k = king();
     return `<p>${GOALS.king.d}</p>
-      <p>${ico('crown')} ${winSeats(me()).map(id => `${P(id).name} ${P(id).owner === me() ? '<span class="good">held</span>' : '<span class="bad">not held</span>'}`).join(' · ')}${crowned ? ' · <span class="good">anointed</span>' : k ? ` · the crown is worn by ${esc(FAC(k).pname)}` : ''}</p>
+      <p>${ico('crown')} ${winSeats(me()).map(id => `${P(id).name} ${P(id).owner === me() ? '<span class="good">held</span>' : seatHeld(me(), id) ? '<span class="good">yours by right</span>' : '<span class="bad">not held</span>'}`).join(' · ')}${SC.win && SC.win.altTxt ? `<br><span class="sub">${SC.win.altTxt}</span>` : ''}${crowned ? ' · <span class="good">anointed</span>' : k ? ` · the crown is worn by ${esc(FAC(k).pname)}` : ''}</p>
       <p>${ico('map')} Your own counties in the kingdom: ${dh} of ${dn}</p><div class="bar"><i style="width:${pct(Math.min(dh, dn), dn)}%"></i></div>
       ${(() => { const r = greatRival(me()), rh = r ? domainHeld(r) : 0, ok = rh <= rivalCap(); return r ? `<p>${ico('swords')} Your greatest rival: ${esc(FAC(r).name)}, with ${rh} counties. ${ok ? '<span class="good">No rival holds more than ' + rivalCap() + '.</span>' : `<span class="bad">Bring every rival down to ${rivalCap()} or fewer.</span>`}</p>` : ''; })()}
-      <p class="sub">The first house to have all three wins, and is crowned as it wins: there is no need to hold a coronation first.${G.playOn && goalMet(me()) ? `<br><button class="btn gold" onclick="claimWin()"><span class="lbl">${ico('crown')}Claim the victory</span></button>` : ''}${k && k !== me() ? ` The king holds ${domainHeld(k)} of the kingdom's counties.` : ''}</p>${size}`;
+      <p class="sub">The first house to have all three wins, and is ${WIN.crowned} as it wins: there is no need to hold a coronation first.${G.playOn && goalMet(me()) ? `<br><button class="btn gold" onclick="claimWin()"><span class="lbl">${ico('crown')}Claim the victory</span></button>` : ''}${k && k !== me() ? ` The king holds ${domainHeld(k)} of the kingdom's counties.` : ''}</p>${size}`;
   }
   return `<p>${GOALS.conquest.d} <b>${rivals}</b> rival house${rivals === 1 ? '' : 's'} still stand${rivals === 1 ? 's' : ''}.</p>${fall}<p class="sub">You hold ${domainHeld(me())} of the kingdom's ${FRANCE.length} counties.</p><div class="bar"><i style="width:${pct(domainHeld(me()), FRANCE.length)}%"></i></div>${size}`;
 }

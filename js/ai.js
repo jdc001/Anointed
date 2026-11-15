@@ -352,8 +352,10 @@ function aiWar(fid, A) {
   // the endgame: a house well on its way plays for the win itself, crowned or not: the crown cities it lacks,
   // the rivals standing over the quarter line, and the kingdom's counties it still needs
   const fin = D.finish ?? 1, prog = domainHeld(fid) / domainNeed(), endgame = goalId() === 'king' && fin > 0 && prog >= 0.55;
-  const missSeats = endgame ? winSeats(fid).filter(id => P(id).owner !== fid) : [];
+  const missSeats = endgame ? winSeats(fid).filter(id => !seatHeld(fid, id)) : [];
   const blockers = endgame ? alive().filter(o => o !== fid && domainHeld(o) > rivalCap()) : [];
+  // the last step: with everything else in hand and one seat missing, the strongest host marches for it (Rome, say)
+  const lastSeat = endgame && missSeats.length === 1 && domainHeld(fid) >= domainNeed() * 0.9 && A === strongestArmy(fid) ? missSeats[0] : null;
   let best = null, bs = -1, bestS = null;
   const hitP = G.hitP = G.hitP || {};
   for (const p of provList()) {
@@ -374,6 +376,7 @@ function aiWar(fid, A) {
     let need = Math.max(1.05, base - 0.06 * A.idle) - (few ? 0.3 : 0) + 0.25 * atP;
     if (ambitious && crownNeeds(fid).includes(p.id)) need = Math.max(1.05, need - 0.3);
     if (missSeats.includes(p.id)) need = Math.max(1.05, need - 0.35 * fin);
+    else if (lastSeat && (HOPS[lastSeat][p.id] ?? 99) < (HOPS[lastSeat][A.loc] ?? 99)) need = Math.max(1.05, need - 0.3 * fin);
     else if (p.owner && blockers.includes(p.owner) && KPROV[p.id]) need = Math.max(1.05, need - 0.15 * fin);
     const canSiege = p.b.castle && armySize(A) >= (p.owner ? 12 : 7) && ap >= power(defenders(p)) * (cap ? 2.4 : p.owner ? 1.1 : 0.9) * (vsPlayer ? 1 + D.pNeed * 0.4 : 1);
     if (ratio < need && !canSiege) continue;
@@ -383,7 +386,9 @@ function aiWar(fid, A) {
     if (wantCrown && crownNeeds(fid).includes(p.id)) val = (val + 8) * (ambitious ? 3 : 1);
     else if (ambitious && goalCity) val *= 1 + 0.9 / (1 + (HOPS[goalCity][p.id] ?? 9));
     if (missSeats.includes(p.id)) val = (val + 10) * (1 + 2 * fin);
-    else if (missSeats.length) val *= 1 + 0.8 * fin / (1 + (HOPS[missSeats[0]][p.id] ?? 9));
+    // every step that brings the host nearer a missing seat is worth more, however far it is
+    else if (missSeats.length) { const m = missSeats.slice().sort((x, y) => (HOPS[x][A.loc] ?? 99) - (HOPS[y][A.loc] ?? 99))[0], d = HOPS[m][p.id] ?? 9, here = HOPS[m][A.loc] ?? 9; val *= 1 + 0.8 * fin / (1 + d) + (d < here ? 0.6 * fin : 0); }
+    if (lastSeat && (HOPS[lastSeat][p.id] ?? 99) < (HOPS[lastSeat][A.loc] ?? 99)) val *= 1 + 3 * fin;
     if (endgame && p.owner && blockers.includes(p.owner) && KPROV[p.id]) val *= 1 + 0.9 * fin;
     if (endgame && prog < 1 && KPROV[p.id]) val *= 1 + 0.4 * fin;
     // (France only: the Empire's wrath in Lorraine. On the Empire map 'lo' is the Lombard south)

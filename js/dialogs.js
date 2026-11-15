@@ -116,7 +116,7 @@ function openLog() {
 }
 
 // ================= SETTINGS =================
-const APP_VERSION = '1.3.3';
+const APP_VERSION = '1.4.0';
 function openSettings() {
   const seg = (key, opts) => `<div class="seg">${opts.map(([v, l, i]) => `<button class="${SET[key] === v ? 'on' : ''}" onclick="setOpt('${key}','${v}')">${ico(i)}${l}</button>`).join('')}</div>`;
   const sw = key => `<div class="sw${SET[key] ? ' on' : ''}" onclick="setOpt('${key}',${!SET[key]})"></div>`;
@@ -160,7 +160,7 @@ function openHelp() {
   const rows = ['foot', 'bow', 'cav', 'cat'].map(t => `<tr><td>${ico(UNIT_ICON[t])} ${UNIT[t].n}</td><td>${UNIT[t].c} d</td><td>${UNIT[t].atk || '–'}</td><td>${UNIT[t].rng || '–'}</td><td>${UNIT[t].chg || '–'}</td><td>${UNIT[t].hp || '–'}</td></tr>`).join('');
   const T = {
     goal: `${SC.help.top}
-      <p><b>The goal.</b> You choose it when you raise your banner. <i>${SC.crown.title}</i>: wear the crown, or hold the places a king is made in, with half of the kingdom's counties in your own hands and no rival house holding more than a quarter of them. You are crowned as you win; you need not hold the coronation first. Paying for it earlier gives you the king's strength while you fight on. <i>Full conquest</i>: break every rival house. The first house to reach the goal wins, and the last house standing always wins.</p>
+      <p><b>The goal.</b> You choose it when you raise your banner. <i>${WIN.goal || SC.crown.title}</i>: hold ${andList(winSeats('').map(id => (PROV.find(r => r[0] === id) || [, id])[1]))}, with ${SHARE_TXT} of the kingdom's counties in your own hands and no rival house holding more than a quarter of them. You are crowned as you win; you need not hold the coronation first. Paying for it earlier gives you the king's strength while you fight on. <i>Full conquest</i>: break every rival house. The first house to reach the goal wins, and the last house standing always wins.</p>
       <p><b>The crown.</b> ${SC.crown.rule()} The king's counties in the kingdom pay +1 d and raise double levies, his host fights 10% harder, and lesser lords swear to him for a third less. Whoever takes the places a king needs can take the crown from him.</p>
       <p><b>How the houses feel about you.</b> Each house's mood runs from hostile to friendly, shown on its Envoys tab with the reasons: attacks on it (a grudge that fades over a few years), how much of the kingdom you hold, your armies at its border, the crown, a pact or alliance, or an enemy you both fight. A hostile house attacks you more readily and asks more for a pact; a friendly one leaves you alone and signs cheaply. The second bar shows where things stand: at war (you have fought in the last two years), no pact, pact or allied.</p>
       <p><b>Pacts and alliances.</b> Every house plays for the crown. Open Envoys to sign a pact of peace (2 or 3 years) that neither side can break, an alliance that also lets your armies march through each other's lands, or a war alliance that turns another house on a third. A house that gains from it asks nothing; a reluctant one names its price in silver, or takes a county instead; a hostile one refuses.</p>
@@ -396,7 +396,7 @@ function openTitles() {
 function showWinChoice() {
   sfx('horn');
   const seats = winSeats(me()).map(id => P(id).name).join(' and ');
-  showModal(`<div class="sealmark">${ico('crown')}</div><h2 class="ctr">The crown is yours to take</h2>
+  showModal(`<div class="sealmark">${ico('crown')}</div><h2 class="ctr">${WIN.offer || 'The crown is yours to take'}</h2>
     <p class="ctr">You hold ${seats}, ${domainHeld(me())} of the kingdom's ${FRANCE.length} counties, and no rival is strong enough to stand against you.</p>
     <p class="sub ctr">Claim it, and the game ends in victory. Or play on: conquer more, chase trophies, break the last rivals. You can claim the victory later from your goal, as long as you still meet it.</p>
     <div class="grid2"><button class="btn gold" onclick="claimWin()"><span class="lbl">${ico('crown')}Claim the victory</span></button><button class="btn" onclick="playOn()"><span class="lbl">${ico('swords')}Play on</span></button></div>`);

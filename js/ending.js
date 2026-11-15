@@ -6,7 +6,7 @@ const mapOfGame = S => MAPS[(S && S.map) || 'france'] || SC;
 const onThisMap = L => !!L && (L.map || 'france') === MAP_ID && (L.ids || []).every(id => CELLD[id]);
 // a house as it was on the map its game was played on
 const houseOfGame = (id, map) => ((MAPS[map || 'france'] || SC).FACTIONS.find(f => f.id === id)) || FACMAP[id] || null;
-const latinTitle = M => M.crown.latin.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+const latinTitle = M => ((M.win && M.win.latin) || M.crown.latin).toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 
 // ---------- the ending ----------
 // replaces the old one-box ending: a coronation (or a fall), then the chronicle of the game
@@ -18,15 +18,15 @@ gameOver = function () {
   if (won) {
     setMusic('coronation'); sfx('bell'); setTimeout(() => sfx('cheer'), 900); buzz(60);
     const body = S.how === 'conquest'
-      ? `In ${dateStr(G.turn)} the last rival house falls. ${SC.crown.endAll(FAC(me()).pname)}`
-      : `In ${dateStr(G.turn)} ${SC.crown.endWon(FAC(me()).pname)} ${owned(me()).length} counties, half the realm of ${SC.crown.people}.`;
-    showModal(`<div class="splash">${coronationScene(me(), 'franks')}<div class="splashtxt"><h2>${SC.crown.latin.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</h2><p class="sub ctr" style="margin-top:-6px">${esc(FAC(me()).name)} · ${G.turn} turns</p><p>${body}</p>
-      <div class="row ctr"><button class="btn gold big" onclick="closeModal();openStats(G.recorded,0)">Long live the King</button></div></div></div>`, 'splashcard');
+      ? `In ${dateStr(G.turn)} the last rival house falls. ${WIN.endAll(FAC(me()).pname)}`
+      : `In ${dateStr(G.turn)} ${WIN.endWon(FAC(me()).pname)} ${owned(me()).length} counties, ${SHARE_TXT === 'half' ? 'half the realm' : 'the heart of the realm'} of ${SC.crown.people}.`;
+    showModal(`<div class="splash">${coronationScene(me(), 'franks', WIN.latin)}<div class="splashtxt"><h2>${WIN.latin.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</h2><p class="sub ctr" style="margin-top:-6px">${esc(FAC(me()).name)} · ${G.turn} turns</p><p>${body}</p>
+      <div class="row ctr"><button class="btn gold big" onclick="closeModal();openStats(G.recorded,0)">${WIN.cheer || 'Long live the King'}</button></div></div></div>`, 'splashcard');
   } else {
     setMusic('defeat'); sfx('defeat');
     const W = G.winner ? FAC(G.winner) : null;
     showModal(`<div class="rep badrep"><div class="sealmark">${ico('swords')}</div><h2>${W ? `${esc(W.name)} takes the crown` : 'Your house has fallen'}</h2>
-      <p>${W ? `${esc(W.pname)} ${alive().length === 1 ? 'has broken every rival house' : `is ${SC.crown.anointed}, master of half the kingdom`}. ${G.fac[me()].alive ? `${esc(rulerOf(me()))} keeps his lands, but not the crown.` : `${esc(rulerOf(me()))}'s line is broken.`}` : `${esc(rulerOf(me()))}'s line is broken. Another will take the kingdom.`}</p>
+      <p>${W ? `${esc(W.pname)} ${alive().length === 1 ? 'has broken every rival house' : `is ${WIN.anointed}, master of half the kingdom`}. ${G.fac[me()].alive ? `${esc(rulerOf(me()))} keeps his lands, but not the crown.` : `${esc(rulerOf(me()))}'s line is broken.`}` : `${esc(rulerOf(me()))}'s line is broken. Another will take the kingdom.`}</p>
       <p class="sub ctr">${dateStr(G.turn)} · ${G.turn} turns</p>
       <div class="row ctr"><button class="btn gold big" onclick="closeModal();openStats(G.recorded,0)">The chronicle of your reign</button></div></div>`);
   }
@@ -61,7 +61,7 @@ const row = (k, v, cls = '') => `<tr><td>${k}</td><td class="${cls}">${v}</td></
 function statsGame(S, L) {
   if (!S) return '<p class="sub">No game finished yet. Play one to the end and its chronicle appears here.</p>';
   const m = S.m || {}, P = profile();
-  let h = `<h3>${S.won ? 'Victory' : 'Defeat'} · ${esc(S.name)}</h3><p class="sub">${S.won ? (S.how === 'conquest' ? 'Every rival broken' : `${mapOfGame(S).crown.crowned[0].toUpperCase() + mapOfGame(S).crown.crowned.slice(1)} with half the kingdom`) : S.winner ? `The crown went to ${esc(FACMAP[S.winner] ? FACMAP[S.winner].name : 'a rebel house')}` : 'Your house fell'} · ${S.year} · ${S.turns} turns · ${DIFF[S.diff] ? DIFF[S.diff].n : ''} rivals${S.challenge ? ' · challenge' : ''}</p>`;
+  let h = `<h3>${S.won ? 'Victory' : 'Defeat'} · ${esc(S.name)}</h3><p class="sub">${S.won ? (S.how === 'conquest' ? 'Every rival broken' : `${((mapOfGame(S).win && mapOfGame(S).win.crowned) || mapOfGame(S).crown.crowned)[0].toUpperCase() + ((mapOfGame(S).win && mapOfGame(S).win.crowned) || mapOfGame(S).crown.crowned).slice(1)} with half the kingdom`) : S.winner ? `The crown went to ${esc(FACMAP[S.winner] ? FACMAP[S.winner].name : 'a rebel house')}` : 'Your house fell'} · ${S.year} · ${S.turns} turns · ${DIFF[S.diff] ? DIFF[S.diff].n : ''} rivals${S.challenge ? ' · challenge' : ''}</p>`;
   if (S.rankAfter > S.rankBefore) h += `<div class="notebox good rankup">${myAchievement(70, { noScroll: true })}<div><b>You rise to ${RANKS[S.rankAfter].n}!</b><br><span class="sub">Unlocked: ${RANKS[S.rankAfter].unlock}.</span></div></div>`;
   else if (S.honour) h += `<div class="notebox good">${ico('star')} <b>An honour: ${esc(S.honour)}.</b> <span class="sub">${(() => { const ho = honourOf(profile().points); return ho.next ? `${ho.n} of 3 honours toward ${RANKS[ho.r + 1].n}.` : `The way to ${RANKS[ho.r + 1] ? RANKS[ho.r + 1].n : 'the next rank'} is open.`; })()}</span></div>`;
   if (S.trophies && S.trophies.length) h += `<div class="notebox good">${ico('star')} <b>New trophies:</b> ${S.trophies.map(id => { const t = TROPHIES.find(x => x.id === id); return t ? `${t.n} (${t.pts})` : id; }).join(', ')}</div>`;
@@ -173,7 +173,7 @@ function shareGame() {
     x.fillStyle = '#2a1d12'; x.font = '700 50px Cinzel, Georgia, serif';
     x.fillText(S.won ? latinTitle(mapOfGame(S)) : 'The crown escapes me', 540, 640);
     x.font = '36px Georgia, serif'; x.fillStyle = '#5c4630';
-    let y = wrapText(x, `${S.name}, ${S.won ? (S.how === 'conquest' ? 'every rival broken' : mapOfGame(S).crown.crowned) : 'beaten'}, in the year ${S.year}, after ${S.turns} turns.`, 540, 700, 880, 48);
+    let y = wrapText(x, `${S.name}, ${S.won ? (S.how === 'conquest' ? 'every rival broken' : ((mapOfGame(S).win && mapOfGame(S).win.crowned) || mapOfGame(S).crown.crowned)) : 'beaten'}, in the year ${S.year}, after ${S.turns} turns.`, 540, 700, 880, 48);
     x.font = 'italic 32px Georgia, serif'; x.fillText(`${RANKS[r].n} · ${P.points} points${S.trophies && S.trophies.length ? ` · ${S.trophies.length} new troph${S.trophies.length === 1 ? 'y' : 'ies'}` : ''}`, 540, y + 6);
     if (onThisMap(L) && L.when === S.when && L.own && L.own.length) {
       const s = L.own[L.own.length - 1] || L.own.filter(Boolean).pop(), cols = L.houses.map(h => h.col), sc = 430 / MH;

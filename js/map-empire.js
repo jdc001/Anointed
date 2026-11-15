@@ -266,7 +266,7 @@ const SEA = [[-10, 30], [30, 30], [30, 60], [-10, 60]];
 
 return {
   id: 'empire', FACTIONS, PROV, REGION_NAME, SEA_ROUTES, EDGES, SEA_LABELS, GENERALS, LADIES,
-  name: 'The Empire, 1002', sub: 'Germany, Italy and the Slav lands', game: 'The Crown of the Germans',
+  name: 'The Empire, 1002', sub: 'Germany, Italy and the Slav lands', game: 'The Imperial Crown',
   geo: { LON0: 2.0, LAT1: 56.0, SX: 49, SY: 70, MW: 965, MH: 1370, lands: [MAIN, SICILY, SARDINIA, CORSICA, FUNEN, ZEALAND, LOLLAND, RUGEN], seas: [SEA], isles: [] },
   realm: 'Germany', foreignTxt: 'German lords resent foreign rule', foreignAsk: 'German lords ask double of foreigners',
   kingdom: { regions: ['de'], core: 'de', n: 'the Germans', short: 'Germany', keys: ['mainz'], at: 'Mainz' },
@@ -275,14 +275,14 @@ return {
   peace: { Name: "The Emperor's Mourning", name: 'the mourning for Otto', ends: 'Otto is buried at Aachen beside Charlemagne and the mourning is over. The great houses may now make war on each other.', breakTxt: 'This attack breaks the mourning for the emperor.' },
   short: { upperlorraine: 'Upper Lorraine', lorraine: 'Lower Lorraine', carinthia: 'Carinthia', byzantium: 'Byzantium', crescentii: 'Rome' },
   crown: {
-    title: 'King of the Germans', of: 'of the Germans', the: 'the crown of the Germans', people: 'the Germans', latin: 'REX TEUTONICORUM', regnum: 'Regnum Teutonicorum', rex: 'Rex Teutonicorum',
+    title: 'King of the Romans', of: 'of the Romans', the: 'the crown of the Romans', people: 'the Germans', latin: 'REX ROMANORUM', regnum: 'Regnum Teutonicorum', rex: 'Rex Romanorum',
     anointed: 'anointed at Mainz', at: 'Mainz', rite: 'At Mainz Archbishop Willigis anoints', start: null,
     needs: (fid, great) => great ? ['mainz'] : ['mainz', 'aachen'],
     why: { mainz: 'Mainz, where Archbishop Willigis anoints kings.', aachen: "Aachen, where Charlemagne's stone throne waits for a king." },
-    coronation: "Kings of the Germans are anointed at Mainz and take their seat on Charlemagne's throne at Aachen.",
+    coronation: "The German king, King of the Romans, is anointed at Mainz and takes his seat on Charlemagne's throne at Aachen. It is the first step: an emperor is crowned only in Rome.",
     rule: () => `A king is anointed at Mainz and enthroned at Aachen: hold Mainz and Aachen and at least ${CROWN_LANDS} counties of the German kingdom, and pay ${CROWN_COST} d. A prince with ${CROWN_GREAT} counties of the kingdom needs only Mainz.`,
     take: 'Take Mainz and Aachen and it can be yours.',
-    won: fid => `At Mainz, before the bishops and princes of the kingdom, Archbishop Willigis anoints ${FAC(fid).pname} King of the Germans.`,
+    won: fid => `At Mainz, before the bishops and princes of the kingdom, Archbishop Willigis anoints ${FAC(fid).pname} King of the Romans. The road to Rome and the imperial crown lies open.`,
     wonAll: fid => `At Mainz the archbishop anoints ${FAC(fid).pname}, and there is no prince left from the Rhine to the Oder to stand against him.`,
     endWon: n => `${n} kneels before the altar at Mainz. Archbishop Willigis anoints him, and at Aachen he takes his seat on Charlemagne's throne while the princes shout their assent.`,
     endAll: n => `At Mainz the archbishop anoints ${n}, and from the Baltic to the Alps no prince stands against him.`,
@@ -293,6 +293,19 @@ return {
   // the map is wide and the houses far apart, so the princes league sooner against a runaway house
   league: 0.22,
   pnames: ['Conrad', 'Otto', 'Henry', 'Bruno', 'Liudolf', 'Ekkehard', 'Dietrich', 'Gero', 'Hermann', 'Udo', 'Adalbert', 'Wichmann', 'Berengar', 'Lambert', 'Ulrich'],
+  // the win is more than the German crown: Mainz and Aachen make a King of the Romans, Rome makes an Emperor
+  win: {
+    goal: 'Emperor of the Romans', latin: 'IMPERATOR ROMANORUM', emperor: true, offer: 'The imperial crown is yours to take',
+    seats: () => ['mainz', 'aachen', 'rome'],
+    // the Pope crowns the emperor: Rome in your hand, or in a sworn ally's, or a Pope who is your man
+    // an anointed King of the Romans has Mainz and Aachen by right; Rome he must hold, or have through an ally or the Pope
+    alt: (fid, id) => id === 'rome' ? ((P('rome').owner && P('rome').owner !== fid && allied(fid, P('rome').owner)) || popeIsYours(fid)) : wears(fid),
+    altTxt: 'Once anointed King of the Romans, Mainz and Aachen are yours by right. Rome counts if you hold it, if an ally holds it, or if more than half the college of cardinals is yours.',
+    crowned: 'crowned emperor in Rome', anointed: 'crowned emperor in Rome',
+    endWon: n => `the Pope sets the imperial crown on ${n}'s head in St Peter's, and the Romans hail him Augustus. Emperor of the Romans, he holds`,
+    endAll: n => `In St Peter's the Pope crowns ${n} emperor, and from the Baltic to Calabria no prince stands against him.`, cheer: 'Long live the Emperor',
+  },
+  domainShare: 0.4,
   coin: 'Pfennigs',
   houseOf: f => f.houseTxt,
   groups: [['The German princes', ['bavaria', 'swabia', 'saxony', 'meissen', 'carinthia']], ['Lotharingia', ['lorraine', 'upperlorraine']], ['The Slavs', ['poland', 'bohemia']], ['Italy', ['ivrea', 'canossa', 'crescentii']], ['The Lombard south', ['benevento', 'salerno']]],
@@ -304,7 +317,7 @@ return {
     <p>${fid === 'bavaria' ? 'You have the regalia. Take Mainz and Aachen, and the bishops will anoint you.' : fid === 'meissen' ? 'The Saxons want you. Live long enough to reach Mainz.' : fid === 'swabia' ? 'The Rhine princes are with you. Take Mainz before Henry does.' : fid === 'poland' ? 'Otto called you brother. With him gone, the marches of the Elbe are yours for the taking, and perhaps more.' : FACMAP[fid].realm === 'Italy' ? 'Italy is yours to fight for. The German crown lies over the Alps.' : FACMAP[fid].realm === 'Lombardy' ? 'The Greeks hold the south-east, the Saracens raid every coast, and the crown is a month\'s ride away.' : 'The princes are divided. Take what you can, and perhaps the crown itself.'}</p>`,
   },
   help: {
-    top: '<p><b>The Empire in 1002.</b> Otto III is dead without a son, and the throne of the Germans is empty. The princes of the kingdom, the Slav dukes, the lords of Italy and the Lombard princes of the south all take what they can. Fourteen houses, from Holstein to Salerno, and the Greeks at Bari.</p>',
+    top: '<p><b>The Empire in 1002.</b> Otto III is dead without a son, and the throne of the Germans is empty. Be anointed King of the Romans at Mainz, then win the empire: hold Mainz, Aachen and Rome with half the German kingdom, and the Pope crowns you emperor. The princes of the kingdom, the Slav dukes, the lords of Italy and the Lombard princes of the south all take what they can. Fourteen houses, from Holstein to Salerno, and the Greeks at Bari.</p>',
     sea: '<p><b>Sea crossings.</b> Dotted lines on the map join counties across the water: Rügen to the shore, and the sea lanes of the Adriatic and the Ligurian coast. An army marches or strikes along one as if the two counties touched. Only the counties of the German kingdom count toward the crown.</p>',
     rich: 'The rich land is along the Rhine and in the cities of Lombardy.',
     peace: () => `<p><b>The emperor's mourning.</b> For the first ${TRUCE} turns, while Otto is carried home to Aachen, the bishops forbid war between the great houses. Break the peace and you are excommunicated.</p>`,
