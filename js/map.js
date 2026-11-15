@@ -312,12 +312,16 @@ function miniMap(fid) {
   const f = FACMAP[fid], home = PROV.find(r => r[0] === f.home);
   const cx = px(home[2]), cy = py(home[3]), w = 520, h = 200;
   const owned = new Set(PROV.filter(r => r[7] === fid).map(r => r[0]));
-  return `<svg viewBox="${cx - w / 2} ${cy - h / 2} ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><rect x="${cx - w}" y="${cy - h}" width="${w * 2}" height="${h * 2}" fill="#d9ca9f"/>
-    ${SEA_POLYS.map(L => `<path d="${pathOf(L)}" fill="#8fa8a3"/>`).join('')}
-    ${PROV.map(r => `<path d="${CELLD[r[0]]}" fill="${owned.has(r[0]) ? mix(f.color, '#efe3c4', 0.3) : '#e8dcb9'}" stroke="#4b3825" stroke-width="1.2"/>`).join('')}
+  // sea underneath, counties clipped to the land (some maps' sea is one great sheet under everything), and names
+  // only for the house's own lands and their neighbours, so they do not pile up
+  const near = new Set([...owned].flatMap(id => [id, ...ADJ[id]])), clip = 'mm' + fid;
+  return `<svg viewBox="${cx - w / 2} ${cy - h / 2} ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="${clip}"><path d="${LANDS.map(pathOf).join(' ')}"/></clipPath></defs>
+    <rect x="${cx - w}" y="${cy - h}" width="${w * 2}" height="${h * 2}" fill="#8fa8a3"/>
+    <g clip-path="url(#${clip})"><rect x="${cx - w}" y="${cy - h}" width="${w * 2}" height="${h * 2}" fill="#d9ca9f"/>
+    ${EDGES.map((e, i) => `<path d="${EDGE_CELLD[i]}" fill="#cbbd96" stroke="#4b3825" stroke-width="0.8"/>`).join('')}
+    ${PROV.map(r => `<path d="${CELLD[r[0]]}" fill="${owned.has(r[0]) ? mix(f.color, '#efe3c4', 0.3) : '#e8dcb9'}" stroke="#4b3825" stroke-width="1.2"/>`).join('')}</g>
     ${LANDS.map(L => `<path d="${pathOf(L)}" fill="none" stroke="#3a2b1b" stroke-width="2.2"/>`).join('')}
-    ${SEA_POLYS.map(L => `<path d="${pathOf(L)}" fill="#8fa8a3" stroke="#3a2b1b" stroke-width="2"/>`).join('')}
-    ${PROV.map(r => `<text class="lbl" style="font-size:13px" text-anchor="middle" x="${px(r[2])}" y="${py(r[3]) + 5}">${r[1]}</text>`).join('')}
+    ${PROV.filter(r => near.has(r[0])).map(r => `<text class="lbl" style="font-size:13px" text-anchor="middle" x="${px(r[2])}" y="${py(r[3]) + 5}">${r[1]}</text>`).join('')}
     ${mapIco('crown', cx, cy - 18, 22)}</svg>`;
 }
 

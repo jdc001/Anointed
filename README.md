@@ -1,4 +1,7 @@
-# Anointed 1.3.0
+# Anointed 1.3.1
+
+## 1.3.1
+- The map on a house's sheet (title screen) drew the sea over the land on the 1066 and Empire maps. The land is now clipped properly, and only the house's own counties and their neighbours are named.
 
 ## 1.3.0 — the field, again, and a polish of the interface (Nov 2026)
 No rule, number or text of play changed.
