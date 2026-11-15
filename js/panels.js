@@ -544,6 +544,16 @@ function allyPanel(p, F, A) {
   if (!p.b.castle && cur !== 'build') h += `<p class="sub">Build a castle here to station a garrison.</p>`;
   return h + (cta ? `<div class="cta">${cta}</div>` : '');
 }
+// the marriage section of a lesser lord's diplomacy tab, when the county has no heiress to court
+function wedHtml(p, F) {
+  const near = provList().filter(q => q.heiress && !q.owner && q.id !== p.id).map(q => [q, Math.min(...owned(me()).map(o => HOPS[o.id][q.id] ?? 99))]).sort((a, b) => a[1] - b[1]).slice(0, 3);
+  const ladies = near.length ? `<p class="sub">${ico('ring')} Heiresses of marrying age: ${near.map(([q, d]) => `<a href="#" onclick="event.preventDefault();goProv('${q.id}')">Lady ${esc(q.heiress)} of ${esc(q.name)}</a>${d < 99 ? ` (${d} ${d === 1 ? 'county' : 'counties'} away)` : ''}`).join(', ')}. Win an heiress and her county is yours outright.</p>` : '';
+  if (!wedsLord(p)) return `<h3>Marriage</h3><p class="sub">No daughter to give here: church lands and free communities are won by alliance, charter or the sword.</p>${ladies}`;
+  const c = wedCost(me(), p), ok = canAlly(me(), p) && F.sons > 0 && !F.proposed && F.gold >= c;
+  const why = !canAlly(me(), p) ? 'you must border them' : F.sons < 1 ? 'no unmarried son' : F.proposed ? 'one marriage a turn' : F.gold < c ? 'not enough silver' : `a son · ${F.sons} left`;
+  return `<h3>Marriage</h3><p>${ico('ring')} Wed one of your sons to a daughter of ${esc(p.lord)}. He swears to you as an ally would, for a dowry of ${c} d instead of the full price. It costs you a son.</p>
+    <button class="btn" onclick="act('wed')" ${ok ? '' : 'disabled'}><span class="lbl">${ico('ring')}Marry into the house</span><small>${c} d · ${why}</small></button>${ladies}`;
+}
 function courtshipIntro(p, F) {
   return `<h3>Marriage</h3><p>${ico('ring')} Lady <b>${p.heiress}</b>, heiress of ${p.name}. Win her hand for one of your sons and the county is yours with its garrison.</p><p class="sub">Her guardians want a suit worth at least <b>${courtFloor(p)}</b>. Your standing counts for ${Math.round(prestige(me(), p))}; a bride price, a promise of protection and a bishop's blessing add to it. Rival houses may bid against you.</p>`;
 }
@@ -604,6 +614,7 @@ function foreignPanel(p, F, A) {
       else h += `<p class="sub">You must border them to treat with them${besiegerOf(p) ? ', and they must not be under siege' : ''}.</p>`;
     } else h += `<p class="sub">${p.lord} is sworn to ${fname(p.ally)}.</p>`;
     if (p.heiress) { h += courtshipIntro(p, F); cta += courtshipBtn(p, F); }
+    else if (!p.ally) h += wedHtml(p, F);
   } else if (cur === 'treaty') {
     const o = p.owner, pu = peaceUntil(me(), o);
     h += `<h3>${esc(FAC(o).name)}</h3><p>${esc(rulerOf(o))} holds ${owned(o).length} counties.</p>${houseStatus(o)}<p class="sub">Send envoys to offer a pact of peace, an alliance that opens your lands to each other's armies, or a war alliance against a third house. If it suits them they ask nothing; if not, they name a price.</p>`;
@@ -671,6 +682,7 @@ function act(c, a) {
     case 'bombard': openCatapult(p); return;
     case 'autobomb': if (A.cat && !A.bombarded && A.siege === p.id) autoBombard(A, p); break;
     case 'lift': note(`You lift the siege of ${p.name}.`); A.siege = null; A.loc = nearestHeld(me(), p.id); break;
+    case 'wed': if (marryAlly(me(), p)) { sfx('bell'); flashProv(p.id); report('A marriage alliance', `Your son weds the daughter of ${p.lord}. ${p.name} swears to you: half of the county's income is yours, and your armies may cross its land.`); } break;
     case 'ally': if (makeAlly(me(), p)) { sfx('bell'); flashProv(p.id); report('A new ally', `${p.lord} of ${p.name} swears to you. Half of the county's income is yours.`); } break;
   }
   save(); render(); showReports();

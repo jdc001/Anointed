@@ -1,4 +1,8 @@
-# Anointed 1.4.0
+# Anointed 1.5.0
+
+## 1.5.0: Marriage alliances and the replay map
+- **Marriage on any county's diplomacy tab.** Next to the alliance and the forged charter, you can wed a son to a lesser lord's daughter. The lord swears to you just as an ally would, for a dowry of about two-fifths of the alliance price, and it costs you a son. One marriage a turn, and church lands and free communities have no daughter to give. Counties with an heiress still offer the full courtship, and the tab lists the nearest heiresses.
+- **The replay map at the end of a game is redrawn** in the style of the title map: sea ripples, rivers, hills and woods, vellum, ships and the compass rose. Realm borders are inked as they move, each living house flies its arms over its seat, a cartouche shows the season and year with a bar for time elapsed, and a roll of the houses keeps a live count of counties, largest first. The legend and the cartouche find open sea on their own, and tall maps are widened to a landscape picture.
 
 ## 1.4.0 — King of the Romans, and Emperor
 - **The Empire, 1002 has two steps.** Being anointed at Mainz and enthroned at Aachen (8 counties of the kingdom and the fee) makes you **King of the Romans**, with the king's bonuses. The win is **Emperor of the Romans**: Mainz, Aachen and Rome, two-fifths of the German kingdom, and no rival over a quarter. Once anointed, Mainz and Aachen are yours by right; Rome counts if you hold it, if an ally holds it, or if the Pope is your man (more than half the college of cardinals). The victory is the imperial coronation in St Peter's.

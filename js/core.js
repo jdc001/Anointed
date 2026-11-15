@@ -1126,6 +1126,18 @@ function makeAlly(fid, p) {
   return true;
 }
 
+// a marriage alliance: a son wed to the lord's daughter, and the lord swears to you for a dowry, not the full price.
+// Church lands and free communities have no daughter to give.
+const wedsLord = p => !!p.lord && !/bishop|abbot|abbess|patriarch|^the /i.test(p.lord);
+const wedCost = (fid, p) => Math.round(allyCost(fid, p) * 0.4);
+function marryAlly(fid, p) {
+  const F = G.fac[fid], c = wedCost(fid, p);
+  if (!canAlly(fid, p) || !wedsLord(p) || p.heiress || F.sons < 1 || F.proposed || F.gold < c) return false;
+  F.gold -= c; F.sons--; F.proposed = true; p.ally = fid;
+  checkVictory();
+  return true;
+}
+
 // ================= SAVE =================
 function save() { try { localStorage.setItem(SK, JSON.stringify(G)); } catch (e) { } }
 function loadSave() { try { const s = localStorage.getItem(SK); return s ? JSON.parse(s) : null; } catch (e) { return null; } }

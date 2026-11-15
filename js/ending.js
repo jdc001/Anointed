@@ -105,21 +105,102 @@ function territoryChart(L) {
 let LAPSE = null;
 function playLapse(L) {
   L = L || loadJ(LAST_KEY, null); const svg = document.getElementById('lapse'); if (!L || !svg || !onThisMap(L)) return;
-  lapseControls();
   if (LAPSE) clearInterval(LAPSE);
-  const cols = L.houses.map(h => h.col);
-  if (!svg.childElementCount) svg.innerHTML = `<defs><clipPath id="lapseclip"><path d="${LANDS.map(pathOf).join(' ')}"/></clipPath></defs><rect width="${MW}" height="${MH}" fill="#9fc3c8"/>` + LANDS.map(l => `<path d="${pathOf(l)}" fill="#d8cba5"/>`).join('') + `<g clip-path="url(#lapseclip)">${L.ids.map(id => `<path d="${CELLD[id]}" data-c="${id}" stroke="#5c4630" stroke-width="1.2"/>`).join('')}</g>`;
-  const cells = [...svg.querySelectorAll('[data-c]')];
   const frames = L.own.map((s, t) => [t, s]).filter(x => x[1]); if (!frames.length) return;
+  if (!svg.childElementCount) svg.innerHTML = lapseArt(L);
+  lapseControls();
+  const H = L.houses, cols = H.map(h => h.col), fill = H.map(h => mix(h.col, '#efe3c4', 0.18));
+  const cells = [...svg.querySelectorAll('[data-c]')], seats = [...svg.querySelectorAll('[data-seat]')];
+  const rows = [...svg.querySelectorAll('[data-row]')], bord = svg.querySelector('#lapsebord');
+  const yr = svg.querySelector('#lapseyear'), bar = svg.querySelector('#lapsebar'), out = document.getElementById('lapseyr');
+  const E = LAPSE_EDGES(L), T0 = frames[0][0], T1 = frames[frames.length - 1][0];
   let i = 0;
   const step = () => {
-    const [t, s] = frames[i];
-    cells.forEach((el, k) => { const ch = s[k]; el.setAttribute('fill', ch === '.' || ch == null ? '#efe4c6' : cols[ch.charCodeAt(0) - 48] || '#999'); });
-    const yr = document.getElementById('lapseyr'); if (yr) yr.textContent = `${dateStr(t)}`;
+    const [t, s] = frames[i], n = H.map(() => 0);
+    cells.forEach((el, k) => { const ch = s[k], h = ch === '.' || ch == null ? -1 : ch.charCodeAt(0) - 48; if (h >= 0) n[h]++; el.setAttribute('fill', h < 0 ? '#e8dcb9' : fill[h] || '#999'); });
+    // the borders of every realm in ink: each edge between two counties with different lords
+    bord.setAttribute('d', E.filter(e => s[e[0]] !== s[e[1]]).map(e => e[2]).join(''));
+    seats.forEach(el => { const h = +el.dataset.seat, k = +el.dataset.k; el.style.opacity = s[k] && s[k].charCodeAt(0) - 48 === h ? 1 : 0; });
+    // the legend, largest house first; the fallen sink to the bottom and fade
+    const order = H.map((x, h) => h).sort((a, b) => n[b] - n[a] || a - b);
+    order.forEach((h, r) => { const el = rows[h], per = +el.dataset.per; el.setAttribute('transform', `translate(${Math.floor(r / per) * el.dataset.dx},${(r % per) * el.dataset.dy})`); el.style.opacity = n[h] ? 1 : 0.35; el.querySelector('.ln').textContent = n[h]; });
+    const ds = dateStr(t); if (yr) yr.textContent = ds; if (out) out.textContent = ds;
+    if (bar) bar.setAttribute('width', (T1 > T0 ? (t - T0) / (T1 - T0) : 1) * bar.dataset.w);
     if (++i >= frames.length) { clearInterval(LAPSE); LAPSE = null; }
   };
   step();
-  LAPSE = setInterval(() => { if (!document.getElementById('lapse')) { clearInterval(LAPSE); LAPSE = null; return; } step(); }, Math.max(60, Math.min(160, 16000 / frames.length)));
+  LAPSE = setInterval(() => { if (!document.getElementById('lapse')) { clearInterval(LAPSE); LAPSE = null; return; } step(); }, Math.max(70, Math.min(170, 18000 / frames.length)));
+}
+// the edges shared by two counties, as [index, index, path]; worked out once from the county shapes
+let LAPSE_E = null;
+function LAPSE_EDGES(L) {
+  if (LAPSE_E && LAPSE_E.map === MAP_ID) return LAPSE_E.e;
+  const at = {}, idx = {}, seen = {}; PROV.forEach((r, i) => idx[r[0]] = i);
+  const key = p => p[0].toFixed(1) + ',' + p[1].toFixed(1);
+  L.ids.forEach((id, k) => { const poly = CELLS[idx[id]]; if (!poly) return; for (let a = 0; a < poly.length; a++) { const p = poly[a], q = poly[(a + 1) % poly.length], ka = key(p), kb = key(q), e = ka < kb ? ka + '|' + kb : kb + '|' + ka; (at[e] = at[e] || []).push(k); seen[e] = [p, q]; } });
+  const e = []; for (const k in at) if (at[k].length === 2) { const [p, q] = seen[k]; e.push([at[k][0], at[k][1], `M${p[0].toFixed(1)},${p[1].toFixed(1)}L${q[0].toFixed(1)},${q[1].toFixed(1)}`]); }
+  LAPSE_E = { map: MAP_ID, e }; return e;
+}
+// where the legend and the cartouche can sit: the open sea, clear of the margin pictures.
+// The land is painted on a coarse canvas once, then every place a box could go is scored by how much it covers.
+function lapseSpots() {
+  const g = 8, W = Math.ceil(MW / g), Hh = Math.ceil(MH / g), c = document.createElement('canvas'); c.width = W; c.height = Hh;
+  const x = c.getContext('2d'); x.scale(1 / g, 1 / g); x.fillStyle = '#0f0';
+  // land beyond the playing area costs little to cover; the counties themselves and the margin pictures cost a great deal
+  const landP = new Path2D(LANDS.concat(ISLES).map(pathOf).join(' ')); x.fill(landP);
+  x.save(); x.clip(landP); x.fillStyle = '#f00'; PROV.forEach(r => x.fill(new Path2D(CELLD[r[0]]))); x.restore();
+  const A = SC.art || {}; x.fillStyle = '#f00';
+  if (A.cart) x.fillRect(px(A.cart[0]) - 10, py(A.cart[1]) - 10, 270, 90);
+  if (A.rose) x.fillRect(px(A.rose[0]) - 55, py(A.rose[1]) - 70, 110, 125);
+  if (A.serpent) x.fillRect(px(A.serpent[0]) - 90 * A.serpent[2], py(A.serpent[1]) - 35 * A.serpent[2], 180 * A.serpent[2], 70 * A.serpent[2]);
+  (A.ships || []).forEach(([lo, la, k]) => x.fillRect(px(lo) - 60 * k, py(la) - 75 * k, 120 * k, 105 * k));
+  const d = x.getImageData(0, 0, W, Hh).data, S = new Float64Array((W + 1) * (Hh + 1));
+  for (let j = 0; j < Hh; j++) for (let i = 0; i < W; i++) S[(j + 1) * (W + 1) + i + 1] = (d[(j * W + i) * 4 + 3] < 40 ? 0 : d[(j * W + i) * 4] > 128 ? 12 : 1) + S[j * (W + 1) + i + 1] + S[(j + 1) * (W + 1) + i] - S[j * (W + 1) + i];
+  const sum = (x0, y0, x1, y1) => { [x0, x1] = [x0, x1].map(v => Math.max(0, Math.min(W, Math.round(v / g)))); [y0, y1] = [y0, y1].map(v => Math.max(0, Math.min(Hh, Math.round(v / g)))); return S[y1 * (W + 1) + x1] - S[y0 * (W + 1) + x1] - S[y1 * (W + 1) + x0] + S[y0 * (W + 1) + x0]; };
+  return (w, h, m, avoid) => {
+    let best = null, bs = Infinity; const F = LF;
+    for (let y = F.y + m; y + h <= F.y + F.h - m; y += 8) for (let xx = F.x + m; xx + w <= F.x + F.w - m; xx += 8) {
+      if (avoid && xx < avoid[0] + avoid[2] + m && xx + w + m > avoid[0] && y < avoid[1] + avoid[3] + m && y + h + m > avoid[1]) continue;
+      // covered land counts most; after that, keep near a frame edge
+      const sc = sum(xx - 6, y - 6, xx + w + 6, y + h + 6) * 100 + Math.min(xx - F.x, F.x + F.w - xx - w, y - F.y, F.y + F.h - y - h) * 0.02;
+      if (sc < bs) { bs = sc; best = [xx, y]; }
+    }
+    return best ? best.concat(bs) : [F.x + m, F.y + m, Infinity];
+  };
+}
+// the replay is drawn like the title map: sea, coast ripples, rivers, hills and woods, vellum and the margin pictures,
+// with each house's arms over its seat, a cartouche for the year and a roll of the houses with their counties
+function lapseArt(L) {
+  lapseFrame(); const u = Math.max(MW, MH) / 1000, H = L.houses, idx = {}; PROV.forEach((r, i) => idx[r[0]] = i);
+  const clip = x => x.split('url(#landclip)').join('url(#lapseclip)').split('url(#vellum)').join('url(#lvellum)');
+  const cols2 = H.length > 9, rw = 262 * u, lw = rw * (cols2 ? 2 : 1) + (cols2 ? 10 * u : 0), rh = 30 * u, per = cols2 ? Math.ceil(H.length / 2) : H.length, lh = 54 * u + per * rh, cw = 270 * u, ch = 92 * u, m = 14 * u;
+  const spot = lapseSpots();
+  const [lx, ly] = spot(lw, lh, m);
+  const [cx, cy] = spot(cw, ch, m, [lx, ly, lw, lh]);
+  const def = h => houseOfGame(h.id, L.map) || {};
+  const shield = (a, x, y, s) => a ? armsSvg(a, s).replace('<svg ', `<svg x="${(x - s / 2).toFixed(1)}" y="${(y - s * 0.6).toFixed(1)}" `) : '';
+  const seats = H.map((h, k) => { const d = def(h), home = d.home || (FACMAP[h.id] || {}).home, j = L.ids.indexOf(home); if (j < 0 || !d.arms) return ''; const r = PROV[idx[home]], x = px(r[2]), y = py(r[3]), s = 34 * u;
+    return `<g data-seat="${k}" data-k="${j}" class="lseat"><ellipse cx="${x}" cy="${y + s * 0.62}" rx="${s * 0.5}" ry="${s * 0.14}" fill="#1d140b" opacity=".35"/>${shield(d.arms, x, y, s)}${mapIco('crown', x, y - s * 0.78, s * 0.62, 'style="color:#e2b33c"')}</g>`; }).join('');
+  const rows = H.map((h, k) => { const d = def(h), y = 46 * u + rh / 2, mine = h.id === L.player, lwr = rw;
+    return `<g data-row="${k}" data-dy="${rh}" data-per="${per}" data-dx="${rw + 10 * u}" class="lrow">${d.arms ? shield(d.arms, 22 * u, y, 20 * u) : `<rect x="${14 * u}" y="${y - 8 * u}" width="${16 * u}" height="${16 * u}" fill="${h.col}"/>`}
+      <rect x="${38 * u}" y="${y - 3 * u}" width="${10 * u}" height="${6 * u}" rx="${2 * u}" fill="${h.col}"/>
+      <text x="${56 * u}" y="${y + 5.5 * u}" font-size="${16 * u}" font-weight="${mine ? 800 : 600}" fill="#2a1d12">${esc(h.n || d.name || h.id)}${mine ? ' ★' : ''}</text>
+      <text class="ln" x="${lwr - 14 * u}" y="${y + 5.5 * u}" font-size="${17 * u}" font-weight="800" text-anchor="end" fill="#2a1d12">0</text></g>`; }).join('');
+  const panel = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${8 * u}" fill="#efe3c4" fill-opacity=".93" stroke="#3a2b1b" stroke-width="${2.4 * u}"/><rect x="${x + 5 * u}" y="${y + 5 * u}" width="${w - 10 * u}" height="${h - 10 * u}" rx="${5 * u}" fill="none" stroke="#8a6a3c" stroke-width="${1 * u}"/>`;
+  return `<defs><clipPath id="lapseclip">${LANDS.map(l => `<path d="${pathOf(l)}"/>`).join('')}</clipPath>${vellumDefs().replace('id="vellum"', 'id="lvellum"')}
+    <filter id="lshadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="${2 * u}" stdDeviation="${3 * u}" flood-color="#1d140b" flood-opacity=".45"/></filter></defs>
+    <rect x="${-MW}" y="${-MH}" width="${MW * 3}" height="${MH * 3}" fill="#8fa8a3"/><rect width="${MW}" height="${MH}" fill="#d9ca9f"/>${SEA_POLYS.map(l => `<path d="${pathOf(l)}" fill="#8fa8a3"/>`).join('')}
+    <g clip-path="url(#lapseclip)">${EDGES.map((e, i) => `<path d="${EDGE_CELLD[i]}" fill="#d6c79f" stroke="#7d6646" stroke-width="1"/>`).join('')}${L.ids.map(id => `<path d="${CELLD[id] || ''}" data-c="${id}" fill="#e8dcb9" stroke="#5c4630" stroke-width="1" stroke-opacity=".7"/>`).join('')}</g>
+    ${clip(coastLayer() + riversLayer() + terrainLayer())}
+    <g clip-path="url(#lapseclip)" pointer-events="none"><path id="lapsebord" fill="none" stroke="#1d140b" stroke-width="${3.2 * u}" stroke-linecap="round" stroke-opacity=".85"/></g>
+    ${LANDS.map(l => `<path d="${pathOf(l)}" fill="none" stroke="#3a2b1b" stroke-width="2.4"/>`).join('')}
+    <rect x="${LF.x - 50}" y="${LF.y - 50}" width="${LF.w + 100}" height="${LF.h + 100}" fill="url(#lvellum)" pointer-events="none"/>${clip(marginArt())}
+    <g filter="url(#lshadow)">${seats}</g>
+    <g transform="translate(${lx},${ly})" filter="url(#lshadow)">${panel(0, 0, lw, lh)}<text x="${lw / 2}" y="${30 * u}" font-size="${17 * u}" font-weight="800" letter-spacing="${2 * u}" text-anchor="middle" fill="#6b1d1d">THE HOUSES</text>${rows}</g>
+    <g transform="translate(${cx},${cy})" filter="url(#lshadow)">${panel(0, 0, cw, ch)}
+      <text x="${cw / 2}" y="${26 * u}" font-size="${13 * u}" font-weight="700" letter-spacing="${1.5 * u}" text-anchor="middle" fill="#6b1d1d"${(SC.name || '').length > 22 ? ` textLength="${cw - 36 * u}" lengthAdjust="spacingAndGlyphs"` : ''}>${esc((SC.name || '').toUpperCase())}</text>
+      <text id="lapseyear" x="${cw / 2}" y="${60 * u}" font-size="${30 * u}" font-weight="800" text-anchor="middle" fill="#2a1d12"></text>
+      <rect x="${20 * u}" y="${72 * u}" width="${cw - 40 * u}" height="${6 * u}" rx="${3 * u}" fill="#cdbb92"/><rect id="lapsebar" data-w="${cw - 40 * u}" x="${20 * u}" y="${72 * u}" width="0" height="${6 * u}" rx="${3 * u}" fill="#8a2a22"/></g>`;
 }
 function statsHistory(H) {
   if (!H.length) return '<p class="sub">Your finished games will be listed here.</p>';
@@ -227,12 +308,15 @@ function refreshTitleRank() { const el = document.getElementById('titlerank'); i
 // the replay map: the whole kingdom at first, then pinch, scroll and drag to look closer
 const LZ = { x: 0, y: 0, w: 0, h: 0 };
 function lapseView(svg) { svg.setAttribute('viewBox', `${LZ.x} ${LZ.y} ${LZ.w} ${LZ.h}`); }
-function lapseFit() { const svg = document.getElementById('lapse'); if (!svg) return; Object.assign(LZ, { x: 0, y: 0, w: MW, h: MH }); lapseView(svg); }
+// the frame the replay is drawn in: the map, widened to a landscape picture when the map is tall, so the legend can sit beside it
+const LF = { x: 0, y: 0, w: 0, h: 0 };
+function lapseFrame() { const w = Math.max(MW, MH * 1.6); Object.assign(LF, { x: -(w - MW) / 2, y: 0, w, h: MH }); return LF; }
+function lapseFit() { const svg = document.getElementById('lapse'); if (!svg) return; if (!LF.w) lapseFrame(); Object.assign(LZ, LF); lapseView(svg); }
 function lapseZoomAt(svg, k, cx, cy) {
   const r = svg.getBoundingClientRect(), s = Math.max(LZ.w / r.width, LZ.h / r.height);
   const ox = (r.width - LZ.w / s) / 2, oy = (r.height - LZ.h / s) / 2, mx = LZ.x + (cx - r.left - ox) * s, my = LZ.y + (cy - r.top - oy) * s;
-  const w = clamp(LZ.w * k, MW / 8, MW), h = w * MH / MW;
-  LZ.x = clamp(mx - (mx - LZ.x) * w / LZ.w, -MW * 0.1, MW - w * 0.9); LZ.y = clamp(my - (my - LZ.y) * h / LZ.h, -MH * 0.1, MH - h * 0.9); LZ.w = w; LZ.h = h; lapseView(svg);
+  const w = clamp(LZ.w * k, LF.w / 8, LF.w), h = w * LF.h / LF.w;
+  LZ.x = clamp(mx - (mx - LZ.x) * w / LZ.w, LF.x - LF.w * 0.1, LF.x + LF.w - w * 0.9); LZ.y = clamp(my - (my - LZ.y) * h / LZ.h, LF.y - LF.h * 0.1, LF.y + LF.h - h * 0.9); LZ.w = w; LZ.h = h; lapseView(svg);
 }
 function lapseControls() {
   const svg = document.getElementById('lapse'); if (!svg || svg._z) return; svg._z = true; lapseFit();
@@ -243,7 +327,7 @@ function lapseControls() {
     if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, [e.clientX, e.clientY]);
     if (pts.size === 2) { const [a, b] = [...pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch) lapseZoomAt(svg, pinch / d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); pinch = d; return; }
     const r = svg.getBoundingClientRect(), s = Math.max(LZ.w / r.width, LZ.h / r.height);
-    LZ.x = clamp(LZ.x - (e.clientX - last[0]) * s, -MW * 0.1, MW - LZ.w * 0.9); LZ.y = clamp(LZ.y - (e.clientY - last[1]) * s, -MH * 0.1, MH - LZ.h * 0.9); last = [e.clientX, e.clientY]; lapseView(svg);
+    LZ.x = clamp(LZ.x - (e.clientX - last[0]) * s, LF.x - LF.w * 0.1, LF.x + LF.w - LZ.w * 0.9); LZ.y = clamp(LZ.y - (e.clientY - last[1]) * s, LF.y - LF.h * 0.1, LF.y + LF.h - LZ.h * 0.9); last = [e.clientX, e.clientY]; lapseView(svg);
   });
   const up = e => { pts.delete(e.pointerId); pinch = 0; if (pts.size === 1) last = [...pts.values()][0]; };
   svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
