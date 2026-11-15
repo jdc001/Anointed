@@ -1,4 +1,11 @@
-# Anointed 1.5.1
+# Anointed 1.5.2
+
+## 1.5.2: Ready for the App Store build
+- **Back up everything** in Settings: one file with every campaign, save slot, trophy, rank, setting and purchase, to keep in Files or iCloud Drive or move to a new device. Restore replaces what is on the device.
+- In the iPhone and iPad app, every change is also copied to a file in the app's private Library folder. If the game's storage is ever cleared, it is put back on the next launch. On the website, the game asks the browser to keep its storage.
+- The `publishing` folder now builds the app with Capacitor 8: `prepare.mjs` bundles the typefaces so the app plays offline from the first launch, and `native/native.js` connects four in-app purchases (full game, each expansion, complete edition) and shows the App Store's local prices.
+- The unlock screens offer the complete edition while two or more purchases are left. The full game is $6.99.
+- A full privacy policy at privacy.html.
 
 ## 1.5.1: The road to Rome
 - In the Empire, a computer house that takes Mainz or Aachen now makes Rome its main aim. Its strongest host heads south and only stops for fights that bring it nearer Rome, unless nothing on the road can be taken. The house's other armies value Rome and the counties on the way. The aim lasts ten turns after Mainz or Aachen is lost, and for good once the house is crowned King of the Romans.

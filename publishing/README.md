@@ -1,14 +1,55 @@
 # Packaging for the App Store
 
-These files have not been built or tested: they are a starting point for whoever does the build on a Mac.
+The iPhone and iPad app is the web game inside a native shell (Capacitor 8). These files are ready for a build on a Mac; they have not yet been built, because that needs Xcode.
 
-What is needed: a Mac with Xcode, Node.js, and an Apple Developer account.
+## What you need
 
-1. Change `appId` in `capacitor.config.json` to your own reverse-domain identifier.
-2. In this folder: `npm install`, then `npx cap add ios`, then `npm run ios`. Xcode opens with the project.
-3. In Xcode: set the signing team, add the app icon (use `publishing/icon-1024.png`: 1024 by 1024, square corners, no transparency, as the App Store wants), set the supported orientations, and run on a device.
-4. Things to check on the device: saves survive closing the app (local storage inside the app), the share sheet opens for save files and result cards, sound starts after the first tap, and the safe areas (notch and home bar) are respected.
-5. Before submitting: bundle the two typefaces (Cinzel and IM Fell English, both under the SIL Open Font License) inside `css/` so the first launch does not need a connection, and remove the Google Fonts link from `index.html`.
-6. App Store Connect needs: a privacy policy URL (`privacy.html` in this repository, served by GitHub Pages), a support URL, screenshots for iPhone and iPad, an age rating questionnaire, and the "Data Not Collected" privacy label.
+- A Mac with Xcode (current version) and Node.js 20 or later.
+- An Apple Developer Program membership. Enrol as an organization (Loveseyland Ltd.) if the company is the seller; Apple asks for a D-U-N-S number for that. Enrolling as an individual is faster but shows your own name as the seller.
+- Enrol in the App Store Small Business Program once the account exists: Apple then keeps 15% of sales instead of 30%.
 
-Android: `npm install @capacitor/android`, `npx cap add android`, and build with Android Studio.
+## Build
+
+From this folder:
+
+1. `npm install`
+2. `npx cap add ios` (first time only)
+3. `npm run ios`. This runs `prepare.mjs`, which copies the game into `www`, downloads the two typefaces into the app so it never needs a connection, and adds `js/native.js`, the App Store purchase bridge. Then Xcode opens.
+4. In Xcode: set the signing team; set the bundle identifier to `com.loveseyland.anointed` (it must match `capacitor.config.json` and the product IDs below); add the app icon from `icon-1024.png` (1024 by 1024, square corners, no transparency); allow all four orientations on iPad and portrait plus landscape on iPhone; turn on the In-App Purchase capability.
+5. Run on a real iPhone and iPad.
+
+After any change to the game, run `npm run sync` and build again.
+
+## Check on the device before TestFlight
+
+- Saves survive force-quitting the app and restarting the phone.
+- Settings, Back up everything: the share sheet opens and "Save to Files" works; Restore brings everything back.
+- Delete and reinstall the app, restore from the backup file: campaigns, trophies and purchases return.
+- Sound starts after the first tap.
+- Nothing hides under the notch, the Dynamic Island or the home bar.
+- With the phone in airplane mode from first launch, the typefaces still show.
+
+## In-app purchases
+
+The app is free to start (see `IAP.md` for the model and the reasoning). Create these four **non-consumable** products in App Store Connect:
+
+| Product ID | What it unlocks | US price |
+|---|---|---|
+| `com.loveseyland.anointed.full` | Every house and difficulty in France, the Chronicler's challenges, five save slots | $6.99 |
+| `com.loveseyland.anointed.britain` | Great Britain & Ireland, 1066 | $3.99 |
+| `com.loveseyland.anointed.empire` | The Empire, 1002 | $3.99 |
+| `com.loveseyland.anointed.complete` | All of the above | $11.99 |
+
+Test them with a Sandbox account in TestFlight, including "Restore a purchase" on a second device.
+
+## App Store Connect
+
+- **Privacy policy URL:** https://jdc001.github.io/Anointed/privacy.html (also the support page).
+- **Privacy label:** Data Not Collected. Bug reports are sent only when the player taps Report a bug and are used only to fix the game, which Apple's rules allow to go undisclosed as optional, user-initiated feedback.
+- **Age rating:** answer "infrequent/mild cartoon or fantasy violence". Expect 9+.
+- **Screenshots:** iPhone 6.9-inch and iPad 13-inch at minimum. The end-of-game replay map is the strongest image.
+- **Name and subtitle:** see the name check notes before choosing the store title.
+
+## Android
+
+`npm install @capacitor/android`, `npx cap add android`, `npm run sync`, then build in Android Studio. The purchase bridge in `native/native.js` would need the Google Play platform added.

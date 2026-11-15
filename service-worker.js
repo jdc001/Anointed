@@ -1,9 +1,9 @@
 // Offline cache: app shell + fonts. Bump VERSION when files change.
 // Caches are shared by every site on jdc001.github.io, so this one only clears its own and the retired 'cotf-' ones.
-const VERSION = 'anointed-1.5.1';
+const VERSION = 'anointed-1.5.2';
 // fetch straight from the server, never from the browser's own HTTP cache, so a new version never caches old files
 const SHELL = ['./', './index.html', './css/style.css', './manifest.webmanifest', './icon.svg', './icon-180.png', './icon-512.png',
-  './js/bugs.js', './js/icons.js', './js/scenario.js', './js/map-france.js', './js/map-britain.js', './js/map-empire.js', './js/data.js', './js/core.js', './js/battle.js', './js/ai.js', './js/powers.js', './js/audio.js', './js/view.js', './js/map.js', './js/mapart.js',
+  './js/bugs.js', './js/backup.js', './js/icons.js', './js/scenario.js', './js/map-france.js', './js/map-britain.js', './js/map-empire.js', './js/data.js', './js/core.js', './js/battle.js', './js/ai.js', './js/powers.js', './js/audio.js', './js/view.js', './js/map.js', './js/mapart.js',
   './js/panels.js', './js/dialogs.js', './js/scenes.js', './js/store.js', './js/saves.js', './js/replay.js', './js/tutor.js', './js/minigames.js', './js/dealings.js', './js/scenery.js', './js/diplomacy.js', './js/stats.js', './js/heraldry.js', './js/ending.js', './js/battlescene.js', './js/battleview.js', './js/catapult.js', './js/difficulty.js', './js/backdrops.js', './js/road.js', './js/app.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => (k.startsWith('anointed-') && k !== VERSION) || k.startsWith('cotf-')).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

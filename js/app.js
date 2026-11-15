@@ -33,7 +33,7 @@ try { const then = sessionStorage.getItem('cotf-then'); if (then) { sessionStora
 // a campaign carried over from another map, loaded once this map is up
 try { const pend = sessionStorage.getItem('cotf-load'); if (pend) { sessionStorage.removeItem('cotf-load'); loadGameObj(JSON.parse(pend)); } } catch (e) { }
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('service-worker.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol !== 'file:' && !(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) navigator.serviceWorker.register('service-worker.js').catch(() => {});
 
 // a one-time nudge for iPhone Safari users to install the game
 (() => {

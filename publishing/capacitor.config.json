@@ -1,6 +1,6 @@
 {
-  "appId": "com.example.anointed",
+  "appId": "com.loveseyland.anointed",
   "appName": "Anointed",
   "webDir": "www",
-  "ios": { "contentInset": "never", "backgroundColor": "#1a120b" }
+  "ios": { "contentInset": "never", "backgroundColor": "#1a120b", "scheme": "Anointed" }
 }

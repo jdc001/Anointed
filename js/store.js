@@ -7,7 +7,10 @@
 // free player is already invested in the ladder when the unlock is offered.
 const STORE = {
   FREE: ['normandy', 'capet', 'flanders'],
-  PRICE: '$5.99',
+  // US prices until the App Store sends the local ones (publishing/native/native.js fills COTF_PRICES)
+  get PRICE() { return (window.COTF_PRICES || {}).full || '$6.99'; },
+  get MAP_PRICE() { return (window.COTF_PRICES || {}).britain || '$3.99'; },
+  get ALL_PRICE() { return (window.COTF_PRICES || {}).complete || '$11.99'; },
   get on() { try { return !!window.COTF_STORE || /[?&]store=1/.test(location.search) || localStorage.getItem('cotf-store-preview') === '1'; } catch (e) { return false; } },
   get unlocked() { try { return localStorage.getItem('cotf-unlocked') === '1'; } catch (e) { return false; } },
 };
@@ -15,7 +18,6 @@ const fullGame = () => !STORE.on || STORE.unlocked;
 // the free houses and difficulties are a France thing; other maps are expansions, bought whole
 const houseLocked = fid => MAP_ID === 'france' && !fullGame() && !SC.free.includes(fid);
 const diffLocked = k => MAP_ID === 'france' && !fullGame() && k !== 'gentle';
-const MAP_PRICE = '$3.99';
 const mapLocked = id => { if (!STORE.on || id === 'france') return false; try { return localStorage.getItem('cotf-unlocked-' + id) !== '1'; } catch (e) { return true; } };
 const slotLocked = n => !fullGame() && n > 1;
 
@@ -23,9 +25,16 @@ function openMapUnlock(id) {
   const M = MAPS[id];
   showModal(`<div class="rep unlock"><div class="sealmark">${ico('map')}</div><h2>${esc(M.name)}</h2><p class="ctr">${esc(M.sub)}. A second campaign: ${M.FACTIONS.length} new houses, a new map, new captains and new events.</p>
     <div class="facs" style="margin:10px 0">${M.FACTIONS.slice(0, 6).map(f => `<span class="tag">${armsSvg(f.arms, 16)} ${esc(f.name)}</span>`).join(' ')} <span class="sub">and more</span></div>
-    <div class="row ctr"><button class="btn gold big" onclick="buyMap('${id}')"><span class="lbl">${ico('map')}Unlock the map · ${MAP_PRICE}</span></button></div>
+    <div class="row ctr"><button class="btn gold big" onclick="buyMap('${id}')"><span class="lbl">${ico('map')}Unlock the map · ${STORE.MAP_PRICE}</span></button></div>${completeOffer()}
     <div class="row ctr"><button class="btn sm ghost" onclick="restorePurchases()">Restore a purchase</button><button class="btn sm ghost" onclick="closeModal()">Not now</button></div></div>`, '', { closable: true });
 }
+// the complete edition: the full game and every expansion map in one purchase, offered while two or more are unbought
+function completeOffer() {
+  const left = (fullGame() ? 0 : 1) + ['britain', 'empire'].filter(mapLocked).length;
+  if (left < 2) return '';
+  return `<div class="row ctr"><button class="btn" onclick="buyComplete()"><span class="lbl">${ico('chest')}Everything: the full game and both expansions · ${STORE.ALL_PRICE}</span></button></div>`;
+}
+function buyComplete() { if (typeof window.COTF_BUY === 'function') { try { window.COTF_BUY('complete'); } catch (e) { toast('The store could not be reached. Try again in a moment.'); } return; } toast('Purchases are made in the App Store version of the game'); }
 function buyMap(id) { if (typeof window.COTF_BUY === 'function') { try { window.COTF_BUY(id); } catch (e) { toast('The store could not be reached. Try again in a moment.'); } return; } toast('Purchases are made in the App Store version of the game'); }
 function cotfMapUnlocked(id) { try { localStorage.setItem('cotf-unlocked-' + id, '1'); } catch (e) { } sfx('bell'); closeModal(); showTitle(); toast(`${MAPS[id] ? MAPS[id].name : 'The map'} is yours`, 'map'); }
 function openUnlock(why) {
@@ -42,7 +51,7 @@ function openUnlock(why) {
       <div>${ico('chest')}<b>Five save slots</b><small>Keep several campaigns going at once</small></div>
     </div>
     <p class="sub ctr">Free now: ${free}, on the gentle setting, with the whole map. Your trophies, points and rank carry over.</p>
-    <div class="row ctr"><button class="btn gold big" onclick="buyFull()"><span class="lbl">${ico('crown')}Unlock the full game · ${STORE.PRICE}</span></button></div>
+    <div class="row ctr"><button class="btn gold big" onclick="buyFull()"><span class="lbl">${ico('crown')}Unlock the full game · ${STORE.PRICE}</span></button></div>${completeOffer()}
     <div class="row ctr"><button class="btn sm ghost" onclick="restorePurchases()">Restore a purchase</button><button class="btn sm ghost" onclick="closeModal()">Not now</button></div>
     <p class="sub ctr" style="font-size:12px">One payment. No ads, no subscriptions.</p></div>`, '', { closable: true });
 }
