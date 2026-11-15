@@ -1,4 +1,7 @@
-# Anointed 1.3.2
+# Anointed 1.3.3
+
+## 1.3.3
+- Each map counts its silver in its own coin: deniers in France, pence in England, pfennigs in the Empire. The sign stays d, from the Latin denarius, as English pence were written until 1971.
 
 ## 1.3.2
 - Fable's 1.3.1 hotfix (the map's names, castles and banners restored) together with the house-sheet map fix: the small map on a house's sheet drew the sea over the land on the 1066 and Empire maps; the land is now clipped properly, and only the house's own counties and their neighbours are named.

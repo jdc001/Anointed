@@ -293,6 +293,7 @@ return {
   // the map is wide and the houses far apart, so the princes league sooner against a runaway house
   league: 0.22,
   pnames: ['Conrad', 'Otto', 'Henry', 'Bruno', 'Liudolf', 'Ekkehard', 'Dietrich', 'Gero', 'Hermann', 'Udo', 'Adalbert', 'Wichmann', 'Berengar', 'Lambert', 'Ulrich'],
+  coin: 'Pfennigs',
   houseOf: f => f.houseTxt,
   groups: [['The German princes', ['bavaria', 'swabia', 'saxony', 'meissen', 'carinthia']], ['Lotharingia', ['lorraine', 'upperlorraine']], ['The Slavs', ['poland', 'bohemia']], ['Italy', ['ivrea', 'canossa', 'crescentii']], ['The Lombard south', ['benevento', 'salerno']]],
   where: fid => ({ Germany: 'The throne is empty and Mainz is close. Every prince of the kingdom can reach for it, and every one of them knows it.', Poland: 'The Elbe marches are open, and the German princes are busy with each other. Push west.', Bohemia: 'The mountains guard you on every side. Your own nobles are the danger.', Italy: 'The Alps lie between you and Mainz. Make Italy yours first, then cross them.', Lombardy: 'The crown is very far away. The Greeks are close, and the Saracens closer.' })[FACMAP[fid].realm] || '',

@@ -254,6 +254,7 @@ return {
     span: 'From Flanders to Barcelona', crowned: 'crowned at Reims', church: 'the archbishop of Reims',
     rules: 'For the first time in a century, a king of the Franks rules as well as reigns.',
   },
+  coin: 'Deniers',
   houseOf: f => f.realm === 'France' ? 'A house of the kingdom of the Franks' : 'A house of the kingdom of Arles',
   groups: [['The north', NORTH], ['The south', null]],
   where: fid => NORTH.includes(fid) ? 'The north is rich and crowded: Reims and Paris are close, and so is every rival.' : 'The south has room to grow, but its counties pay less, the crown is far away, and other powers press from beyond the border.',

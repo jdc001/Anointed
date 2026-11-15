@@ -187,7 +187,7 @@ function haggleOffer() {
 function haggleAccept() { const H = HG; if (!H) return; haggleDone(H.price); }
 function haggleDone(sum) {
   const H = HG; HG = null; const pay = H.mode === 'pay';
-  if (pay) { if (G.fac[me()].gold < sum) return toast('Not enough deniers'); payRansom(me(), sum); }
+  if (pay) { if (G.fac[me()].gold < sum) return toast('Not enough silver'); payRansom(me(), sum); }
   else { G.offers = G.offers.filter(o => o.fid !== H.fid); if (G.fac[H.fid].gold < sum) sum = G.fac[H.fid].gold; payRansom(H.fid, sum); }
   tutorDid('haggle');
   G.reports = G.reports.filter(r => !/Your lord is free|Ransom paid/.test(r.title));

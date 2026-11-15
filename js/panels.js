@@ -250,7 +250,7 @@ function overviewPanel() {
   let ransom = '';
   if (F.captive) { const price = ransomPrice(me()), n = ransomHeld(me()); ransom = `${canHaggleRansom(F) ? `<button class="btn gold" onclick="openHaggleRansom()"><span class="lbl">${ico('chain')}Receive the captor's envoy</span><small>haggle over the price</small></button>` : F.haggled === G.turn ? '<p class="sub">The envoy has gone home; he will return next turn.</p>' : ''}<button class="btn red" onclick="doRansom()" ${F.gold >= price ? '' : 'disabled'}><span class="lbl">${ico('chain')}Offer the usual ransom · ${coin(price)}</span></button><p class="sub">Held ${n} turn${n > 1 ? 's' : ''}. The price is twice your income after one turn, your full income after two, then half; after three turns his captor must accept.</p>`; }
   const tiles = `<div class="tiles">
-    <div class="tile${net < 0 ? ' warn' : ''}" onclick="goProv('${homeOf(me())}')">${ico('coin')}<div class="v">${F.gold}<small style="${net < 0 ? 'color:var(--red)' : ''}"> ${net >= 0 ? '+' : ''}${net}</small></div><div class="k">Deniers</div></div>
+    <div class="tile${net < 0 ? ' warn' : ''}" onclick="goProv('${homeOf(me())}')">${ico('coin')}<div class="v">${F.gold}<small style="${net < 0 ? 'color:var(--red)' : ''}"> ${net >= 0 ? '+' : ''}${net}</small></div><div class="k">${SC.coin}</div></div>
     <div class="tile${!men && !F.captive ? ' warn' : ''}" onclick="ACC.armies=true;render();document.getElementById('acc-armies').scrollIntoView({behavior:'smooth'})">${ico(F.captive ? 'chain' : 'sword')}<div class="v">${men}<small> ${usableArmies(me()).length}/${armyMax(me())}</small></div><div class="k">Men · armies</div></div>
     <div class="tile" onclick="toggleAcc('houses')">${ico('map')}<div class="v">${owned(me()).length}<small>${allies(me()).length ? ' +' + allies(me()).length : ''}</small></div><div class="k">Counties</div></div>
     <div class="tile" onclick="ACC.marriage=true;render();document.getElementById('acc-marriage').scrollIntoView({behavior:'smooth'})">${ico('ring')}<div class="v">${F.sons}</div><div class="k">Sons</div></div>
@@ -644,7 +644,7 @@ function act(c, a) {
   const p = G.sel && G.sel[0] === 'p' ? P(G.sel.slice(2)) : null, F = G.fac[me()], A = myA();
   tutorDid(c);
   switch (c) {
-    case 'build': { const c0 = bldCost(p, a); if (F.gold < c0) return toast('Not enough deniers', 'coin'); F.gold -= c0;
+    case 'build': { const c0 = bldCost(p, a); if (F.gold < c0) return toast('Not enough silver', 'coin'); F.gold -= c0;
       // the guide lets one farm and one market go up at once, to show what they do
       if (G.tut && G.tut.instant === a && BLD[a] && !BLD[a].realm) { G.tut.instant = null; p.b[a] = (p.b[a] || 0) + 1; note(`${bldName(p, a)} completed in ${p.name}, at once this time.`); sfx('build'); buzz(); toast(`${BLD[a].n} finished at once, this time only`, 'hammer'); break; }
       p.build = { type: a, left: bldTurns(p, a), turn: G.turn, cost: c0 }; note(`Work begins in ${p.name}: ${bldName(p, a)}.`); sfx('build'); buzz(); toast(`Work begins: ${bldName(p, a)}`, 'hammer'); break; }
@@ -652,11 +652,11 @@ function act(c, a) {
     case 'greek': { const c = gfCost(me(), A); if (!A.cat || (A.gf || 0) >= GF_MAX || F.gold < c) break; F.gold -= c; A.gf = (A.gf || 0) + 1; tutSpend(me(), 'gf'); sfx('coin'); toast('A sealed jar of Greek fire joins the siege train', 'oil'); break; }
     case 'unbuild': if (p.build && p.build.turn === G.turn && p.build.cost != null) { F.gold += p.build.cost; note(`Work is called off in ${p.name}.`); p.build = null; sfx('click'); toast('Work cancelled, silver returned', 'coin'); } break;
     case 'raise': {
-      const cost = unitCost(me(), a); if (F.gold < cost) return toast('Not enough deniers', 'coin'); F.gold -= cost;
+      const cost = unitCost(me(), a); if (F.gold < cost) return toast('Not enough silver', 'coin'); F.gold -= cost;
       if (a === 'bishop') { F.bishops++; toast('A bishop joins your council', 'bishop'); } else { p.gar[a]++; toast(`${UNIT[a].n} raised in ${p.name}`, UNIT_ICON[a]); }
       sfx(a === 'bishop' ? 'bell' : 'raise'); buzz(); break;
     }
-    case 'raiseA': if (raise(me(), a, A)) { sfx('raise'); buzz(); toast(`${UNIT[a].n} join army ${ARMY_NUM(A)}`, UNIT_ICON[a]); } else toast('Not enough deniers', 'coin'); break;
+    case 'raiseA': if (raise(me(), a, A)) { sfx('raise'); buzz(); toast(`${UNIT[a].n} join army ${ARMY_NUM(A)}`, UNIT_ICON[a]); } else toast('Not enough silver', 'coin'); break;
     case 'xTo': case 'xFrom': { const [t, bid] = a.split(':'), B = army(me(), bid); if (c === 'xTo') shiftMen(me(), A, B, t); else shiftMen(me(), B, A, t); sfx('click'); break; }
     case 'xAllTo': case 'xAllFrom': { const B = army(me(), a); for (const t of ['foot', 'bow', 'cav', 'cat']) c === 'xAllTo' ? shiftMen(me(), A, B, t, 999) : shiftMen(me(), B, A, t, 999); sfx('raise'); break; }
     case 'toArmy': if (p.gar[a] > 0 && slotState(A) === 'active') { p.gar[a]--; A[a]++; } break;
@@ -675,13 +675,13 @@ function act(c, a) {
   }
   save(); render(); showReports();
 }
-function doAppease() { const F = G.fac[me()], u = F.unrest; if (!u) return; const nm = P(u.seed).name; if (appease(me())) { sfx('coin'); buzz(); note(`You buy off the malcontents around ${nm} for ${u.cost} d.`); toast(`The lords of ${nm} are bought off`, 'coin'); } else toast('Not enough deniers', 'coin'); closeModal(); save(); render(); showReports(); }
+function doAppease() { const F = G.fac[me()], u = F.unrest; if (!u) return; const nm = P(u.seed).name; if (appease(me())) { sfx('coin'); buzz(); note(`You buy off the malcontents around ${nm} for ${u.cost} d.`); toast(`The lords of ${nm} are bought off`, 'coin'); } else toast('Not enough silver', 'coin'); closeModal(); save(); render(); showReports(); }
 function doDiplo(id, yes) { const r = answerDiplo(id, yes); if (r && r.ok) { sfx('bell'); buzz(); } closeModal(); save(); render(); showReports(); }
 function doRansom() {
   const r = offerRansom(me());
   if (r === 'paid') sfx('coin');
   else if (r === 'refused') { report('Ransom refused', `${fname(G.fac[me()].captive.by)} refuses your offer and keeps ${rulerOf(me())} another turn. The price will fall.`); }
-  else if (r === null) toast('Not enough deniers', 'coin');
+  else if (r === null) toast('Not enough silver', 'coin');
   save(); render(); showReports();
 }
 function doOffer(fid, yes) { answerOffer(fid, yes); if (yes) sfx('coin'); save(); render(); showReports(); }
@@ -704,7 +704,7 @@ function playerEndTurn(force) {
     if (idle.length) warn.push(`${idle.length === 1 ? 'army ' + ARMY_NUM(idle[0]) + ' has' : idle.length + ' armies have'} not struck this turn`);
     if (F.unrest && F.unrest.at <= G.turn + 1 && !unrestCovered(me())) warn.push(`the unrest at ${P(F.unrest.seed).name} falls due and is uncovered`);
     if (G.diplo) warn.push(`${FAC(G.diplo.from).name}'s envoy is still waiting`);
-    if (F.gold >= 60) warn.push(`${F.gold} deniers lie unspent`);
+    if (F.gold >= 60) warn.push(`${F.gold} ${SC.coin.toLowerCase()} lie unspent`);
     if (warn.length) {
       G.endWarned = true;
       return showModal(`<div class="rep"><div class="sealmark">${ico('next')}</div><h2>End the turn?</h2><p>${warn.map(w => w[0].toUpperCase() + w.slice(1)).join(', and ')}.</p><div class="grid2"><button class="btn gold" id="endyes" onclick="closeModal();playerEndTurn(true)">End turn</button><button class="btn" onclick="closeModal()">Not yet</button></div><p class="sub ctr" style="margin-top:10px">This reminder can be turned off in settings.</p></div>`);
