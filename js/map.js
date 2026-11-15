@@ -66,7 +66,7 @@ const HILL_PAT = (id) => `<pattern id="${id}" width="26" height="18" patternUnit
 function buildMap() {
   mapEl = $('#map');
   const allyPats = FACTIONS.map(f => allyPat(f.id, f.color)).join('');
-  const h = `<defs>
+  const h = `<defs id="mapdefs">
     <clipPath id="landclip">${LANDS.map(L => `<path d="${pathOf(L)}"/>`).join('')}</clipPath>
     <clipPath id="seaclip">${SEA_POLYS.map(L => `<path d="${pathOf(L)}"/>`).join('')}</clipPath>
     <linearGradient id="seag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#96b3ad"/><stop offset="1" stop-color="#7f9e9a"/></linearGradient>
@@ -75,6 +75,8 @@ function buildMap() {
     ${HILL_PAT('hills')}
     <pattern id="edgehatch" width="11" height="11" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="11" height="11" fill="#cdc1a1"/><rect width="3" height="11" fill="#bcb091"/></pattern>
     ${allyPats}
+    <linearGradient id="castleLight" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient>
+    <linearGradient id="pennonSheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".30"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient>
     ${vellumDefs()}
   </defs>
   <rect x="-400" y="-400" width="${MW + 800}" height="${MH + 800}" fill="#d9ca9f"/>
@@ -202,23 +204,46 @@ function castleIcon(p) {
   const lv = castleLv(p), col = p.ruined ? '#7d6f5c' : lv === 1 ? '#6b4a2b' : lv === 2 ? '#4a3826' : '#2f261a';
   let s = '';
   if (p.b.moat && !p.ruined) s += `<ellipse cx="0" cy="6" rx="20" ry="9" fill="none" stroke="#4f7f8a" stroke-width="3"/>`;
-  if (p.ruined) s += `<path d="M-12,10 V2 L-8,-2 L-5,4 L-1,-4 L3,3 L7,-1 L12,6 V10Z" fill="${col}" stroke="#f3e8cc" stroke-width="1.4"/>`;
-  else if (lv === 1) s += `<path d="M-12,10 V-4 L-10,-8 L-8,-4 V-5 L-6,-9 L-4,-5 L-2,-9 L0,-5 L2,-9 L4,-5 L6,-9 L8,-5 L10,-8 L12,-4 V10Z" fill="${col}" stroke="#f3e8cc" stroke-width="1.4"/>`;
-  else s += `<path d="M-12,10 V-6 H-12 V-13 H-7.5 V-9 H-2.5 V-13 H2.5 V-9 H7.5 V-13 H12 V-6 V10 Z" fill="${col}" stroke="#f3e8cc" stroke-width="1.6"/>${lv === 3 ? '<path d="M-17,10 V-1 H-12 M17,10 V-1 H12" stroke="' + col + '" stroke-width="5" fill="none"/><path d="M-17,10 V-1 H-12 M17,10 V-1 H12" stroke="#f3e8cc" stroke-width="1.2" fill="none"/>' : ''}<path d="M-3,10 V3 a3,3 0 0 1 6,0 V10Z" fill="#f3e8cc"/>`;
+  const shade = d => `<path d="${d}" fill="url(#castleLight)"/>`;
+  s += `<ellipse cx="1" cy="11" rx="15" ry="3" fill="#2a1d1233"/>`;
+  if (p.ruined) { const d = 'M-12,10 V2 L-8,-2 L-5,4 L-1,-4 L3,3 L7,-1 L12,6 V10Z'; s += `<path d="${d}" fill="${col}" stroke="#f3e8cc" stroke-width="1.4"/>${shade(d)}<path d="M-9,10 V5 M-2,10 V1 M6,10 V4" stroke="#f3e8cc" stroke-opacity=".35" stroke-width="1"/>`; }
+  else if (lv === 1) { const d = 'M-12,10 V-4 L-10,-8 L-8,-4 V-5 L-6,-9 L-4,-5 L-2,-9 L0,-5 L2,-9 L4,-5 L6,-9 L8,-5 L10,-8 L12,-4 V10Z'; s += `<path d="${d}" fill="${col}" stroke="#f3e8cc" stroke-width="1.4"/>${shade(d)}<path d="M-12,1 H12 M-12,6 H12" stroke="#f3e8cc" stroke-opacity=".28" stroke-width=".8"/><path d="M-2,10 V5 a2,2 0 0 1 4,0 V10Z" fill="#f3e8cc"/>`; }
+  else { const d = 'M-12,10 V-6 H-12 V-13 H-7.5 V-9 H-2.5 V-13 H2.5 V-9 H7.5 V-13 H12 V-6 V10 Z'; s += `<path d="${d}" fill="${col}" stroke="#f3e8cc" stroke-width="1.6"/>${shade(d)}${lv === 3 ? '<path d="M-17,10 V-1 H-12 M17,10 V-1 H12" stroke="' + col + '" stroke-width="5" fill="none"/><path d="M-17,10 V-1 H-12 M17,10 V-1 H12" stroke="#f3e8cc" stroke-width="1.2" fill="none"/><path d="M-17,10 V-1 H-12" stroke="#fff" stroke-opacity=".18" stroke-width="2" fill="none"/>' : ''}<path d="M-12,-3 H12 M-12,2 H12 M-12,6 H12" stroke="#f3e8cc" stroke-opacity=".22" stroke-width=".8"/><path d="M-3,10 V3 a3,3 0 0 1 6,0 V10Z" fill="#f3e8cc"/><path d="M-6,-6 h2 v3 h-2z M4,-6 h2 v3 h-2z" fill="#f3e8cc" fill-opacity=".8"/>`; }
   if (hasOuter(p) && (p.outer ?? 100) < 100) { const o = p.outer ?? 100; s += `<rect x="-12" y="19" width="24" height="3" rx="1" fill="#0006"/><rect x="-12" y="19" width="${24 * o / 100}" height="3" rx="1" fill="#7a6a4a"/>`; }
   if (!p.ruined && p.walls < 100) s += `<rect x="-12" y="13" width="24" height="4" rx="1" fill="#0006"/><rect x="-12" y="13" width="${24 * p.walls / 100}" height="4" rx="1" fill="${p.walls < 34 ? '#c0392b' : p.walls < 67 ? '#d4a017' : '#5c8a3a'}"/>`;
   return s;
 }
-const bannerSvg = (color, n, siege, gen) => `<g><path d="M2,-31 h28 l-7,9 l7,9 h-28z" fill="#0005" transform="translate(1.5,2)"/><line x1="0" y1="-34" x2="0" y2="10" stroke="#2a1d12" stroke-width="3"/><circle cx="0" cy="-36" r="2.6" fill="#e2b33c"/><path d="M0,-33 h28 l-7,9 l7,9 h-28z" fill="${color}" stroke="#2a1d12" stroke-width="1.6"/><path d="M2,-31 h22" stroke="#fff" stroke-opacity=".3" stroke-width="2"/></g>${gen ? mapIco('fleur', 11, -24, 13, 'style="color:#f3e8cc"') : ''}<circle cx="13" cy="20" r="11" fill="#2a1d12" stroke="${color}" stroke-width="2"/><text class="cnt" x="13" y="25" style="stroke-width:0;font-size:14px">${n}</text>${siege ? mapIco('tent', -22, -10, 22, 'style="color:#f3e8cc"') + mapIco('tent', -22, -10, 18, 'style="color:' + color + '"') : ''}`;
+// the charge of a house's arms, fitted to the pennon: figures are kept in proportion, field divisions are stretched to fill it
+const FIGURES = new Set(['lion', 'fleur', 'eagle', 'star', 'tower', 'roundels', 'semy', 'perpale', 'perfess']);
+function pennonCharge(fid) {
+  if (!fid || typeof FAC !== 'function') return '';
+  const a = FAC(fid).arms; if (!a || a.t === 'plain') return '';
+  const id = 'sh' + (shieldN++);
+  const tf = FIGURES.has(a.t) ? 'translate(2.6,-34.5) scale(0.44)' : 'translate(0,-33) scale(0.7,0.375)';
+  return `<clipPath id="${id}"><path d="M0,-33 h28 l-7,9 l7,9 h-28z"/></clipPath><g clip-path="url(#${id})"><g transform="${tf}">${armsCharge({ ...a, c: a.c || '#f3e8cc' }, 'M0,0 H40 V48 H0Z')}</g></g>`;
+}
+const bannerSvg = (color, n, siege, gen, fid) => `<g><path d="M2,-31 h28 l-7,9 l7,9 h-28z" fill="#0005" transform="translate(1.5,2)"/><line x1="0" y1="-34" x2="0" y2="10" stroke="#2a1d12" stroke-width="3"/><line x1="-0.6" y1="-34" x2="-0.6" y2="10" stroke="#fff" stroke-opacity=".25" stroke-width="1"/><circle cx="0" cy="-36" r="2.6" fill="#e2b33c"/><path d="M0,-33 h28 l-7,9 l7,9 h-28z" fill="${color}"/>${pennonCharge(fid)}<path d="M0,-33 h28 l-7,9 l7,9 h-28z" fill="url(#pennonSheen)" stroke="#2a1d12" stroke-width="1.6"/></g>${gen ? mapIco('fleur', 11, -24, 13, 'style="color:#f3e8cc"') : ''}<circle cx="13" cy="20" r="11" fill="#2a1d12" stroke="${color}" stroke-width="2"/><text class="cnt" x="13" y="25" style="stroke-width:0;font-size:14px">${n}</text>${siege ? mapIco('tent', -22, -10, 22, 'style="color:#f3e8cc"') + mapIco('tent', -22, -10, 18, 'style="color:' + color + '"') : ''}`;
 // (no fleets in this game)
 const shipSvg_unused = (color, n) => `<g><ellipse cx="2" cy="6" rx="28" ry="5" fill="#0004"/><path d="M-26,2 Q-30,-8 -22,-9 L22,-9 Q30,-8 26,2 Q0,12 -26,2Z" fill="#6b4a2b" stroke="#2a1d12" stroke-width="1.6"/><path d="M-27,-4 q-4,-10 2,-12 M27,-4 q4,-10 -2,-12" stroke="#6b4a2b" stroke-width="3" fill="none"/><line x1="0" y1="-9" x2="0" y2="-42" stroke="#2a1d12" stroke-width="2.4"/><path d="M-15,-40 H15 V-14 H-15Z" fill="${color}" stroke="#2a1d12" stroke-width="1.4"/><path d="M-15,-31 H15 M-15,-22 H15" stroke="#f3e8cc" stroke-width="2" opacity=".7"/></g><circle cx="0" cy="22" r="10" fill="#2a1d12" stroke="${color}" stroke-width="2"/><text class="cnt" x="0" y="26.5" style="stroke-width:0;font-size:13px">${n}</text>`;
 
+// a county's colour is laid on as a wash, lighter where the light falls, so the map reads as painted rather than filled
+const WASHES = new Set();
+function ensureWash(fid, mine) {
+  const id = 'wash-' + fid + (mine ? '-me' : '');
+  if (!document.getElementById(id)) {
+    const c = mix(FAC(fid).color, '#efe3c4', mine ? 0.3 : 0.42);
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient'); g.id = id; g.setAttribute('x1', '0'); g.setAttribute('y1', '0'); g.setAttribute('x2', '1'); g.setAttribute('y2', '1');
+    g.innerHTML = `<stop offset="0" stop-color="${mix(c, '#fff8e4', .22)}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${mix(c, '#3a2b1b', .14)}"/>`;
+    $('#mapdefs').appendChild(g);
+  }
+  return `url(#${id})`;
+}
 function renderMapFill() {
   for (const p of provList()) {
     const el = document.getElementById('c-' + p.id);
     if (p.ally) ensureAllyPattern(p.ally);
     const base = p.r === 'fr' ? '#ede2c3' : p.r === 'ca' ? '#eadbbd' : '#e3dcc0';
-    el.setAttribute('fill', p.owner ? mix(FAC(p.owner).color, '#efe3c4', p.owner === me() ? 0.3 : 0.42) : p.ally ? `url(#al-${p.ally})` : base);
+    el.setAttribute('fill', p.owner ? ensureWash(p.owner, p.owner === me()) : p.ally ? `url(#al-${p.ally})` : base);
   }
   // thick coloured outline around the player's holdings, so your realm reads at a glance
   const mine = provList().filter(p => holds(me(), p.id));
@@ -276,7 +301,7 @@ function renderOverlay() {
       const n = armySize(a); if (!n) continue;
       if (fid === me()) continue;
       const p = P(a.loc); const k = at[a.loc] = (at[a.loc] || 0) + 1;
-      o += `<g class="pin" transform="translate(${(p.x + (20 + (k - 1) * 34) * s).toFixed(1)},${(p.y - 14 * s).toFixed(1)}) scale(${s.toFixed(2)})">${bannerSvg(FAC(fid).color, n, !!a.siege, !!armyGen(fid, a))}</g>`;
+      o += `<g class="pin" transform="translate(${(p.x + (20 + (k - 1) * 34) * s).toFixed(1)},${(p.y - 14 * s).toFixed(1)}) scale(${s.toFixed(2)})">${bannerSvg(FAC(fid).color, n, !!a.siege, !!armyGen(fid, a), fid)}</g>`;
     }
   }
   setHTML($('#ov'), o);
@@ -319,7 +344,7 @@ function renderMyBanners(s, at) {
     if (!a.loc || !n || !G.fac[me()].alive) { g.innerHTML = ''; continue; }
     const p = P(a.loc); const k = at[a.loc] = (at[a.loc] || 0) + 1;
     const chosen = a.id === G.army, num = ARMY_IDS.indexOf(a.id) + 1;
-    g.innerHTML = (chosen ? '<circle cx="4" cy="-12" r="34" fill="#e2b33c22" stroke="#e2b33c" stroke-width="3"/>' : '') + bannerSvg(col, n, !!a.siege, !!armyGen(me(), a)) + `<circle cx="-10" cy="-30" r="8" fill="#f3e8cc" stroke="#2a1d12" stroke-width="1.5"/><text x="-10" y="-26" text-anchor="middle" style="font:700 11px Cinzel,serif;fill:#2a1d12">${num}</text>` + (!armyUsable(me(), a) ? mapIco('lock', -10, -30, 12) : '');
+    g.innerHTML = (chosen ? '<circle cx="4" cy="-12" r="34" fill="#e2b33c22" stroke="#e2b33c" stroke-width="3"/>' : '') + bannerSvg(col, n, !!a.siege, !!armyGen(me(), a), me()) + `<circle cx="-10" cy="-30" r="8" fill="#f3e8cc" stroke="#2a1d12" stroke-width="1.5"/><text x="-10" y="-26" text-anchor="middle" style="font:700 11px Cinzel,serif;fill:#2a1d12">${num}</text>` + (!armyUsable(me(), a) ? mapIco('lock', -10, -30, 12) : '');
     g.setAttribute('transform', `translate(${(p.x + (20 + (k - 1) * 34) * s).toFixed(1)},${(p.y - 14 * s).toFixed(1)}) scale(${s.toFixed(2)})`);
     g.style.cursor = 'pointer';
     g.onclick = e => { e.stopPropagation(); };

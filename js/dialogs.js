@@ -116,13 +116,13 @@ function openLog() {
 }
 
 // ================= SETTINGS =================
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.3.0';
 function openSettings() {
   const seg = (key, opts) => `<div class="seg">${opts.map(([v, l, i]) => `<button class="${SET[key] === v ? 'on' : ''}" onclick="setOpt('${key}','${v}')">${ico(i)}${l}</button>`).join('')}</div>`;
   const sw = key => `<div class="sw${SET[key] ? ' on' : ''}" onclick="setOpt('${key}',${!SET[key]})"></div>`;
   const vol = key => `<div class="setrow volrow"><div class="l"><small>Volume</small></div><input type="range" min="0" max="100" step="5" value="${Math.round(volOf(key) * 100)}" aria-label="${key === 'musicVol' ? 'Music' : 'Effects'} volume" oninput="SET.${key}=this.value/100;sndVolumes()" onchange="saveSettings();${key === 'sfxVol' ? "sfx('coin')" : ''}"></div>`;
   showModal(`<h2>${ico('gear')} Settings</h2>
-    <div class="setrow"><div class="l">Layout<small>Phone: map with a sliding sheet. Desktop: map with a sidebar.</small></div>${seg('layout', [['auto', 'Auto', 'auto'], ['phone', 'Phone', 'phone'], ['desktop', 'Desktop', 'desktop']])}</div>
+    <div class="setrow"><div class="l">Layout<small>Phone: a sliding sheet. Tablet: the panel under the map, drag its handle to resize. Desktop: a sidebar.</small></div>${seg('layout', [['auto', 'Auto', 'auto'], ['phone', 'Phone', 'phone'], ['tablet', 'Tablet', 'tablet'], ['desktop', 'Desktop', 'desktop']])}</div>
     <div class="setrow"><div class="l">Music<small>Composed as you play: an air for each season, and others for war, the fair, the siege and the crown</small></div>${sw('music')}</div>
     ${SET.music ? vol('musicVol') : ''}
     <div class="setrow"><div class="l">Sound effects<small>Stones, fire, rats, bells, horns, the march and the hammer</small></div>${sw('sfxOn')}</div>

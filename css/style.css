@@ -732,3 +732,258 @@ body.nomotion #title .tbg, body.nomotion #title .hcrown .glint, body.nomotion #t
 .ctguide .tn { font-family: var(--head); font-size: 12px; color: var(--gold3); flex: none; padding-top: 2px; }
 .ctguide b { font-family: var(--head); font-size: 13.5px; letter-spacing: .04em; display: block; color: #fff; }
 .ctbar .ammo .btn.hint { outline: 3px solid #8fb0ff; outline-offset: 1px; animation: tutglow 1.2s ease-in-out infinite; }
+
+/* =====================================================================
+   Tablet held upright: the map above a fixed panel, which the grip resizes
+   ===================================================================== */
+body.t { --dock-h: 66px; --hdr-h: 60px; }
+body.t #mapwrap { bottom: var(--panel-h, 44%); transition: bottom .3s cubic-bezier(.2,.8,.2,1); }
+body.t #panel { position: absolute; left: 0; right: 0; bottom: 0; height: var(--panel-h, 44%); border-top: 3px double var(--gold); box-shadow: 0 -8px 28px #0006; transition: height .3s cubic-bezier(.2,.8,.2,1); }
+body.resizing #panel, body.resizing #mapwrap { transition: none !important; }
+body.t #grip { display: flex; justify-content: center; padding: 7px 0 3px; flex: none; cursor: ns-resize; touch-action: none; }
+body.t #grip span { width: 56px; height: 5px; border-radius: 3px; background: var(--line2); box-shadow: 0 1px 0 #fff8; }
+body.t #grip:active span { background: var(--gold); }
+body.t #pbody { padding: 4px 20px 24px; }
+body.t #pfoot:empty { display: none; }
+body.t #pfoot { flex: none; border-top: 1px solid var(--line); background: #ecdcb4; }
+body.t #pfoot .cta { position: static; margin: 0; padding: 10px 20px 10px; background: none; }
+body.t #pfoot .cta .btn { min-height: 52px; }
+body.t #dock { display: flex; }
+body.t .hbtns .desk { display: none; }
+body.t .dk { font-size: 12px; letter-spacing: .08em; gap: 3px; }
+body.t .dk .ic { width: 26px; height: 26px; }
+body.t .dk.end { flex: 1.1; margin: 7px 10px 7px 6px; font-size: 13.5px; }
+body.t .hname { font-size: 18px; } body.t .hdate { font-size: 13.5px; }
+body.t .chip { font-size: 15px; padding: 5px 11px 5px 8px; }
+/* the realm view: six tiles across and two columns of accordions; the county view flows in two columns, its header across both */
+body.t #pbody.ov .tiles { grid-template-columns: repeat(6, 1fr); }
+body.t #pbody.ov .accs { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; align-items: start; }
+body.t #pbody.ov .accs .acc { margin: 7px 0; }
+body.t #pbody.prov .grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+body.t #pbody.prov .xfer { max-width: 520px; }
+/* dialogs on a tablet are centred cards, a little wider than on a phone */
+body.t .modal { padding: 20px; align-items: center; }
+body.t .card { max-width: 700px; border-radius: 14px; }
+body.t .card.wide { max-width: 960px; }
+body.t .card.battle { max-width: 1000px; }
+body.t #drawer { top: 0; right: 0; bottom: 0; width: 480px; border-left: 3px double var(--gold); animation: drin .25s cubic-bezier(.2,.8,.2,1); }
+body.t #tutor { right: auto; width: 440px; bottom: 12px; font-size: 15px; }
+body.t #hintbox { top: auto; bottom: calc(var(--panel-h, 44%) + var(--dock-h) + var(--sab) + 14px); width: min(460px, 60vw); left: auto; right: 14px; transform: none; }
+body.t #armybar { top: 12px; gap: 7px; }
+body.t .ab { min-width: 74px; padding: 6px 8px 5px; }
+body.t .ab b { font-size: 16px; } body.t .ab .n { font-size: 14px; } body.t .ab small { font-size: 12px; max-width: 90px; }
+body.t .ctl { width: 46px; height: 46px; }
+body.t #toast { bottom: calc(var(--dock-h) + var(--sab) + var(--panel-h, 44%) + 14px); }
+
+/* =====================================================================
+   Pass 2: the turn strip, treasury motion and panel transitions
+   ===================================================================== */
+.tstrip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 2px 0 10px; padding: 8px 10px; border-radius: 12px; background: var(--tex), linear-gradient(#3b2819, #22170e); border: 1px solid var(--gold); box-shadow: inset 0 0 0 1px #0006, 0 2px 8px #0005; color: #e8d9b4; }
+.tstrip.ready { background: var(--tex), linear-gradient(#2d3b22, #16200f); }
+.ts-i { display: inline-flex; align-items: center; gap: 6px; font-family: var(--head); font-size: 13px; letter-spacing: .04em; color: inherit; background: none; border: 0; padding: 4px 6px; border-radius: 8px; white-space: nowrap; cursor: default; }
+.ts-i .ic { width: 18px; height: 18px; color: var(--gold3); }
+.ts-i b { font-size: 17px; color: var(--gold3); }
+.ts-i.act { cursor: pointer; background: #e2b33c22; border: 1px solid #e2b33c66; padding: 5px 8px 5px 8px; }
+.ts-i.act .go { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; background: var(--gold2); color: #2a1d12; align-items: center; justify-content: center; margin-left: 2px; }
+.ts-i.act .go .ic { width: 14px; height: 14px; color: #2a1d12; }
+.ts-i.act:active { transform: translateY(1px); filter: brightness(1.1); }
+.ts-i.done { color: #cfe8bd; } .ts-i.done .ic { color: #9fd57f; }
+.ts-i.bad { color: #ffc9bf; } .ts-i.bad .ic { color: #ff9c8c; }
+.ts-i.warn { cursor: pointer; background: #ff9c8c1a; border: 1px solid #ff9c8c55; color: #ffd9d2; } .ts-i.warn .ic { color: #ffb3a6; }
+.ts-goal { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 150px; cursor: pointer; padding: 0 4px; }
+.ts-goal .ic { width: 18px; height: 18px; color: var(--gold3); flex: none; }
+.ts-goal .bar { flex: 1; height: 8px; border-radius: 4px; background: #0008; box-shadow: inset 0 1px 2px #000a, 0 0 0 1px #e2b33c33; overflow: hidden; }
+.ts-goal .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #a67c1f, #ffd979 60%, #e2b33c); box-shadow: 0 0 6px #ffd97988; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.ts-goal small { font-family: var(--head); font-size: 12px; letter-spacing: .04em; color: #e8d9b4; white-space: nowrap; }
+body.m .tstrip { margin-top: 0; }
+body.t .ts-i { font-size: 14px; } body.t .ts-i b { font-size: 19px; }
+/* the treasury chip */
+.chip.gold .num { display: inline-block; min-width: 2ch; text-align: right; font-variant-numeric: tabular-nums; }
+.chip.gold.up .num { animation: coinup .7s ease-out; } .chip.gold.down .num { animation: coindown .7s ease-out; }
+@keyframes coinup { 0% { color: #c9f5a8; transform: translateY(-3px); } 100% { color: var(--gold3); transform: none; } }
+@keyframes coindown { 0% { color: #ffb3a6; transform: translateY(3px); } 100% { color: var(--gold3); transform: none; } }
+.chip.shake { animation: shake .45s cubic-bezier(.36,.07,.19,.97); border-color: #ff9c8c; }
+@keyframes shake { 10%, 90% { transform: translateX(-1px); } 20%, 80% { transform: translateX(2px); } 30%, 50%, 70% { transform: translateX(-4px); } 40%, 60% { transform: translateX(4px); } }
+/* the panel's content slides up when a new county or the realm is shown */
+#pbody.swap > * { animation: pswap .28s cubic-bezier(.2,.8,.2,1) both; }
+#pbody.swap > *:nth-child(2) { animation-delay: .03s; } #pbody.swap > *:nth-child(3) { animation-delay: .06s; } #pbody.swap > *:nth-child(n+4) { animation-delay: .09s; }
+@keyframes pswap { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+body.nomotion #pbody.swap > * { animation: none; }
+/* the desktop end-turn button pulses when every army has moved */
+.btn.gold.pulse { animation: endpulse 1.6s ease-in-out infinite; }
+
+/* =====================================================================
+   Pass 3: illumination — embossed buttons, illuminated cards, corner-work, drop capitals
+   ===================================================================== */
+.btn { position: relative; overflow: hidden; }
+.btn::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 46%; background: linear-gradient(#ffffff55, #ffffff00); pointer-events: none; border-radius: inherit; }
+.btn.gold { box-shadow: inset 0 0 0 2px #fff6dd44, inset 0 1px 0 #ffe9a8, inset 0 -2px 0 #6b4d12, 0 2px 5px #0006; }
+.btn.gold::after { background: linear-gradient(#ffffff66, #ffffff00); }
+.btn.red { box-shadow: inset 0 0 0 2px #ffffff22, inset 0 0 0 3px #e2b33c66, inset 0 -2px 0 #3a0a08, 0 2px 5px #0006; }
+.btn.ghost::after { display: none; }
+.btn:active::after { opacity: .5; }
+/* dialogs: the room behind blurs, the card is edged in gilt with corner-work */
+.modal { backdrop-filter: blur(3px) saturate(.8); -webkit-backdrop-filter: blur(3px) saturate(.8); }
+/* no blur behind a moving scene: it would cost a repaint of the whole map every frame */
+.modal:has(canvas), .modal:has(.scenehead) { backdrop-filter: none; -webkit-backdrop-filter: none; }
+body.nomotion .modal { backdrop-filter: none; -webkit-backdrop-filter: none; }
+.card { box-shadow: 0 18px 60px #000d, 0 0 0 1px #fff6dd55 inset; }
+.card::before { content: ''; position: absolute; inset: 7px; pointer-events: none; border-radius: 8px; border: 1px solid #b8892c66; z-index: 0;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.card.battle::before, .card.ctcard::before, .card.scene::before { display: none; }
+.card > * { position: relative; z-index: 1; }
+/* reports: an illuminated initial, a rule of fleurons, a seal that sits in a ring */
+.rep .sealmark { box-shadow: 0 3px 8px #0008, inset 0 0 0 4px #b8892c, inset 0 0 0 6px #fbeec8, 0 0 0 3px #e2b33c33; position: relative; }
+.rep .sealmark::after { content: ''; position: absolute; inset: -9px; border-radius: 50%; border: 1px dashed #b8892c88; }
+.rep h2 { margin: 2px 0 8px; }
+.rep h2::after { content: '❦ ❦ ❦'; display: block; font-size: 11px; letter-spacing: .5em; color: var(--gold); margin-top: 6px; }
+.rep > p:first-of-type::first-letter { float: left; font-family: var(--head); font-weight: 700; font-size: 44px; line-height: .82; padding: 6px 7px 0 0; color: var(--red); text-shadow: 1px 1px 0 #e2b33c88; }
+/* the panel's headings and accordions take a little gilt */
+.acc { box-shadow: inset 0 1px 0 #fff8, 0 1px 2px #0002; }
+.acc > .ah .ic { filter: drop-shadow(0 1px 0 #fff8); }
+.tile { box-shadow: inset 0 1px 0 #fffa, 0 1px 2px #0003; background: var(--tex), linear-gradient(#f5ead0cc, #eadcb8cc); }
+.tile .v { text-shadow: 0 1px 0 #fff8; }
+.phead h2 { text-shadow: 0 1px 0 #fff8; }
+/* the dock: a ruled brass edge and a warmer glow on the end-turn seal */
+#dock { box-shadow: 0 -2px 10px #0008, inset 0 1px 0 #ffe9a833, inset 0 2px 0 #00000055; }
+.dk.end { box-shadow: inset 0 0 0 2px #fff6dd44, inset 0 1px 0 #ffe9a8, inset 0 -2px 0 #6b4d12, 0 2px 6px #0007; }
+.dk .ic { filter: drop-shadow(0 1px 0 #000a); }
+/* the header: the house's achievement is lit from above */
+.hach { filter: drop-shadow(0 2px 3px #000a); }
+.chip { box-shadow: inset 0 1px 0 #ffffff14, 0 1px 2px #0006; }
+/* the turn strip's bar keeps a brass rim */
+.tstrip { box-shadow: inset 0 0 0 1px #0006, inset 0 1px 0 #ffe9a822, 0 2px 8px #0005; }
+/* the army bar's chosen slot glows gold */
+.ab.on, .ab.sel { box-shadow: 0 0 0 2px #e2b33c, 0 0 12px #e2b33c88, 0 2px 6px #0007; }
+/* tabs: embossed, with a gilt underline on the active tab */
+.tabs { box-shadow: inset 0 1px 3px #0003; }
+.tabs button.on { box-shadow: 0 1px 3px #0005, inset 0 1px 0 #fff9; }
+
+/* =====================================================================
+   Pass 4: the battle HUD
+   ===================================================================== */
+.card.battle { background: var(--tex), linear-gradient(#2b1d13, #1c120b); padding: 10px 12px 12px; }
+.bview { gap: 8px; }
+.bstage { position: relative; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1px #5e4515, 0 0 0 3px #e2b33c33, 0 10px 30px #000a inset; }
+.bview canvas { border-radius: 0; border: 0; }
+.bhud { background: linear-gradient(#3a2819, #241810); border: 1px solid #e2b33c55; border-radius: 10px; padding: 8px 12px; box-shadow: inset 0 1px 0 #ffe9a822, 0 2px 8px #0006; }
+.bhud .nm { font-size: 16px; letter-spacing: .04em; color: var(--gold3); text-shadow: 0 1px 0 #000; }
+.bhud .nm .shield { filter: drop-shadow(0 1px 2px #000a); }
+.bhud .st { font-family: var(--head); font-style: normal; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: #d9c9a3; opacity: .85; }
+.bhud .hb { height: 12px; border-radius: 6px; background: #000000aa; border: 1px solid #e2b33c66; box-shadow: inset 0 1px 3px #000; max-width: 360px; position: relative; }
+.bhud .hb::after { content: ''; position: absolute; inset: 1px 1px auto 1px; height: 4px; border-radius: 3px; background: linear-gradient(#ffffff44, #ffffff00); pointer-events: none; }
+.bhud .hb i { border-radius: 5px; box-shadow: 0 0 6px #ffffff33 inset; transition: width .35s cubic-bezier(.2,.8,.2,1); }
+.bhud .cnts { font-size: 13.5px; color: #f3e8cc; gap: 10px; }
+.bhud .cnts .ic { color: var(--gold3); }
+.bhud .phase { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold3); }
+.bhud .phase::before, .bhud .phase::after { content: '❦'; color: var(--gold); margin: 0 8px; font-size: 11px; }
+.bhud .tot { font-family: var(--head); font-size: 15px; color: #f3e8cc; letter-spacing: .06em; }
+.bord { color: #f3e8cc; }
+.bord .st { color: #e8d9b4; }
+.bctl .btn { background: var(--tex), linear-gradient(#f3e6c4, #d9c49a); }
+.bctl .btn.dark { background: var(--tex), linear-gradient(#4a3524, #2b1d13); }
+body.m .card.battle { padding: 8px; }
+.bvlight { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.bstage canvas { position: relative; z-index: 1; }
+.bstage .rotbox { position: relative; }
+.bview canvas#bvc { background: transparent; }
+
+/* =====================================================================
+   Pass 6: painted rooms over the court, church, parley, fair and bower
+   ===================================================================== */
+.scenehead { position: relative; margin: -18px -20px 14px; height: 176px; overflow: hidden; border-bottom: 2px solid var(--gold); box-shadow: inset 0 -30px 40px -20px #0008; background: #2b1f17; }
+.scenehead canvas { width: 100%; height: 100%; display: block; object-fit: cover; }
+.scenehead::after { content: ''; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 50px #0007; }
+.scenehead .scenecap { position: absolute; left: 0; right: 0; bottom: 0; padding: 6px 14px; font-family: var(--head); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold3); background: linear-gradient(#0000, #000a); text-shadow: 0 1px 0 #000; }
+.card.wide .scenehead { margin: -14px -14px 12px; }
+.card .x { z-index: 3; }
+body.m .scenehead { height: 132px; border-radius: 16px 16px 0 0; margin: -16px -16px 12px; }
+body.t .scenehead { height: 190px; }
+
+/* =====================================================================
+   Pass 7: the road — the campaign as an illuminated itinerary, and the turn's errands
+   ===================================================================== */
+.roadwrap { position: relative; margin: 10px 0 6px; border-radius: 10px; overflow: hidden; border: 1px solid #5e4515; box-shadow: 0 4px 14px #0005; }
+.roadwrap canvas { width: 100%; display: block; }
+.roadpins { position: absolute; inset: 0; }
+.pin { position: absolute; transform: translate(-50%, -50%); background: none; border: 0; padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; width: 150px; color: var(--ink); font-family: var(--head); }
+.pin .ring { position: relative; width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #f8eed6, #d9c59a); border: 2px solid #5e4515; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 8px #0007, inset 0 0 0 3px #fff6dd88; }
+.pin .ring i { position: absolute; inset: -5px; border-radius: 50%; background: conic-gradient(var(--gold2) calc(var(--f) * 360deg), #0000 0); -webkit-mask: radial-gradient(circle, #0000 60%, #000 62%); mask: radial-gradient(circle, #0000 60%, #000 62%); }
+.pin .ring .ic { width: 22px; height: 22px; color: var(--red); }
+.pin.done .ring { background: radial-gradient(circle at 40% 35%, #ffe9a8, #b8892c); } .pin.done .ring .ic { color: #fff8e4; }
+.pin b { margin-top: 5px; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; text-shadow: 0 1px 0 #fff8, 0 0 6px #f3e6c6; }
+.pin small { font-family: var(--body); font-style: italic; font-size: 11.5px; color: var(--ink2); line-height: 1.15; text-shadow: 0 1px 0 #fff8, 0 0 6px #f3e6c6; }
+.pin:active .ring { transform: scale(.96); }
+.errands { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.errand { display: flex; align-items: center; gap: 10px; text-align: left; background: var(--tex), linear-gradient(#faf2dc, #e4d2a6); border: 1px solid #7d6438; border-radius: 10px; padding: 9px 10px; cursor: pointer; color: var(--ink); box-shadow: inset 0 0 0 2px #fff6dd88, 0 1px 2px #0004; font-family: var(--body); }
+.errand > .ic:first-child { width: 26px; height: 26px; color: var(--red); flex: none; }
+.errand > .ic:last-child { width: 16px; height: 16px; color: var(--ink2); margin-left: auto; flex: none; }
+.errand div { min-width: 0; } .errand b { display: block; font-family: var(--head); font-size: 13px; letter-spacing: .03em; } .errand span { display: block; font-size: 13px; color: var(--ink2); line-height: 1.25; }
+.errand.hot { border-color: var(--red2); box-shadow: inset 0 0 0 2px #fff6dd88, 0 0 0 1px #b8342c55, 0 1px 2px #0004; }
+.errand:active { transform: translateY(1px); }
+body.m .pin { width: 96px; } body.m .pin small { display: none; } body.m .pin .ring { width: 38px; height: 38px; } body.m .pin b { font-size: 9.5px; }
+
+/* ---- debug pass: the HUD on a phone held upright keeps one row, names trimmed, the phase narrow ---- */
+body.m .bhud { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 6px; }
+body.m .bhud .nm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; display: block; }
+body.m .bhud .mid { min-width: 0; max-width: 150px; }
+body.m .bhud .phase { font-size: 10.5px; letter-spacing: .08em; } body.m .bhud .phase::before, body.m .bhud .phase::after { display: none; }
+body.m .bhud .st { font-size: 9px; letter-spacing: .08em; } body.m .bhud .tot { font-size: 13px; }
+/* ---- the road's stations alternate above and below the road so their names never touch ---- */
+.pin:nth-child(even) { flex-direction: column-reverse; }
+.pin:nth-child(even) b { margin: 0 0 5px; } .pin:nth-child(even) small { order: 1; margin-bottom: 2px; }
+.pin { width: 132px; } .pin b { font-size: 11px; line-height: 1.1; } .pin small { font-size: 11px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+body.m .pin { width: 88px; }
+
+/* =====================================================================
+   Pass 8: motes of dust in the title's light, a sheen on the title
+   ===================================================================== */
+#title::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .7;
+  background-image: radial-gradient(circle, #ffe9a8cc 0 1.2px, #0000 2px), radial-gradient(circle, #ffd97999 0 1px, #0000 2px), radial-gradient(circle, #fff6dd88 0 .8px, #0000 1.6px);
+  background-size: 260px 300px, 180px 220px, 120px 160px; background-position: 0 0, 60px 80px, 30px 40px; animation: motes 38s linear infinite; }
+@keyframes motes { to { background-position: 40px -300px, -30px -440px, 20px -480px; } }
+#title .inner { position: relative; z-index: 1; }
+body.nomotion #title::before { animation: none; }
+
+/* =====================================================================
+   Pass 10: the army bar bears arms; badges on buttons; a gilt frame around the map on wide screens
+   ===================================================================== */
+.ab b { display: inline-flex; align-items: center; gap: 4px; } .ab b .shield { filter: drop-shadow(0 1px 1px #0008); } .ab b .ic { width: 13px; height: 13px; color: var(--red); }
+.ab.on { background: var(--tex), linear-gradient(#fff3d2, #ecd9a8); border-color: var(--gold); }
+.ab.done { opacity: .72; filter: saturate(.7); }
+.btn .badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--red2); color: #fff; font-size: 11px; font-family: var(--head); display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 1px solid #fff5; box-shadow: 0 1px 3px #0006; }
+body.d #mapwrap::after, body.t #mapwrap::after { content: ''; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 1px #5e451566, inset 0 0 60px #3a2b1b33; z-index: 5; }
+
+/* =====================================================================
+   Pass 11: interface polish — rules, hover and press, accordion motion, gilt seams
+   ===================================================================== */
+.phead { padding-bottom: 8px; border-bottom: 1px solid var(--line); position: relative; }
+.phead::after { content: "❦"; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); font-size: 11px; color: var(--gold); background: #f3e7c9; padding: 0 8px; line-height: 1.2; border-radius: 8px; }
+.tile { transition: transform .15s, box-shadow .15s; }
+.tile:active, .tile.btn-like:active { transform: translateY(1px); box-shadow: inset 0 1px 0 #fffa, 0 0 0 #0000; }
+.tile .ic { color: var(--gold); filter: drop-shadow(0 1px 0 #fff8); }
+.acc > .ah { transition: background .15s; }
+.acc > .ah:hover { background: #ffffff33; }
+.acc > .ah:active { background: #00000008; }
+.acc.open > .ah { border-bottom: 1px dashed var(--line); }
+.acc .ab, .acc .body { animation: accin .22s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes accin { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+body.nomotion .acc .ab, body.nomotion .acc .body { animation: none; }
+.tabs button { transition: color .15s, background .15s; }
+.tabs button:not(.on):hover { color: var(--ink); background: #ffffff22; }
+.seg button { transition: background .15s, color .15s; }
+.chip.btn-like { transition: transform .12s, border-color .15s; } .chip.btn-like:hover { border-color: var(--gold2); } .chip.btn-like:active { transform: translateY(1px); }
+.btn { transition: transform .08s, filter .15s, box-shadow .15s; }
+.btn:hover { filter: brightness(1.04); }
+.btn.gold:hover { box-shadow: inset 0 0 0 2px #fff6dd44, inset 0 1px 0 #ffe9a8, inset 0 -2px 0 #6b4d12, 0 3px 9px #0007, 0 0 14px #e2b33c55; }
+.dk { transition: color .15s, transform .1s; } .dk:active { transform: translateY(1px); }
+.dk.on::after { box-shadow: 0 0 8px #ffd979aa; }
+#toast { border: 1px solid #e2b33c66; box-shadow: 0 8px 24px #000a, inset 0 1px 0 #ffe9a822; }
+#hintbox { box-shadow: 0 8px 24px #000a, inset 0 1px 0 #ffffff22; }
+.card h2 { position: relative; }
+.notebox { box-shadow: inset 0 1px 0 #fff8, 0 1px 2px #0002; }
+.grid button, .grid .btn { transition: transform .08s; }
+/* the panel's scrollbar, where one shows */
+#pbody::-webkit-scrollbar, .card::-webkit-scrollbar, #drawer::-webkit-scrollbar { width: 8px; } #pbody::-webkit-scrollbar-thumb, .card::-webkit-scrollbar-thumb, #drawer::-webkit-scrollbar-thumb { background: #b8892c88; border-radius: 4px; border: 2px solid #0000; background-clip: padding-box; }
+/* selection ring on the map's county is a little softer */
+#map .sel { stroke-linejoin: round; }

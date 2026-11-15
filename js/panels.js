@@ -36,7 +36,8 @@ function renderArmyBar() {
     const st = slotState(a), n = armySize(a), on = a.id === A.id;
     if (st === 'locked') return `<button class="ab lock" onclick="openCourt()" title="${ARMY_IDS.indexOf(a.id) === 1 ? 'Hold 9 counties to field a second army' : 'Hold 25 counties, or be a king with two princes sworn to you, to field a third army'}">${ico('lock')}<span>${ARMY_NUM(a)}</span></button>`;
     if (st === 'nogen') return `<button class="ab lock" onclick="nogenClick()" title="Needs a general: tap to raise it">${ico('fleur')}<span>${ARMY_NUM(a)}</span></button>`;
-    return `<button class="ab${on ? ' on' : ''}${a.acted ? ' done' : ''}" onclick="pickArmy('${a.id}')"><b>${ARMY_NUM(a)}</b><span class="n">${st === 'captive' ? ico('chain') : ico('foot') + n}</span><small>${st === 'captive' ? 'captive' : (a.loc ? P(a.loc).name : '—')}${a.siege ? ' ⚔' : ''}</small><small class="mv">${st === 'captive' ? '' : a.acted ? 'done' : a.mp + '/' + MOVES + ' mv'}</small></button>`;
+    const gen = armyGen(me(), a);
+    return `<button class="ab${on ? ' on' : ''}${a.acted ? ' done' : ''}" onclick="pickArmy('${a.id}')"><b>${a.id === ARMY_IDS[0] ? shield(me(), 15) : gen ? ico('fleur') : ''}${ARMY_NUM(a)}</b><span class="n">${st === 'captive' ? ico('chain') : ico('foot') + n}</span><small>${st === 'captive' ? 'captive' : (a.loc ? P(a.loc).name : '—')}${a.siege ? ' ⚔' : ''}</small><small class="mv">${st === 'captive' ? '' : a.acted ? 'done' : a.mp + '/' + MOVES + ' mv'}</small></button>`;
   }).join(''));
 }
 
@@ -45,7 +46,7 @@ function renderHeader() {
   const f = FAC(me()), F = G.fac[me()];
   const gross = grossIncome(me()), up = upkeepOf(me());
   const net = gross - up;
-  const chips = [`<span class="chip btn-like" onclick="openTreasury()" title="Treasury ${F.gold} d · income +${gross} · upkeep −${up} · net ${net >= 0 ? '+' : ''}${net} a turn">${ico('coin')}<span class="num">${F.gold}</span><small class="${net >= 0 ? 'good' : 'bad'}">${net >= 0 ? '+' : ''}${net}/turn</small></span>`];
+  const chips = [`<span class="chip btn-like gold" onclick="openTreasury()" title="Treasury ${F.gold} d · income +${gross} · upkeep −${up} · net ${net >= 0 ? '+' : ''}${net} a turn">${ico('coin')}<span class="num" data-v="${F.gold}">${HDR.gold == null ? F.gold : HDR.gold}</span><small class="${net >= 0 ? 'good' : 'bad'}">${net >= 0 ? '+' : ''}${net}/turn</small></span>`];
   { const wars = alive().filter(f => f !== me() && atWar(me(), f)), left = TRUCE - G.turn;
     const tip = truce() ? `${SC.peace.Name}: ${left} turn${left === 1 ? '' : 's'} left` : wars.length ? `At war with ${wars.map(f => FAC(f).name).join(', ')}` : 'At war with no one';
     chips.push(truce() ? `<span class="chip peace btn-like" onclick="openRelations()" title="${esc(tip)}">${ico('dove')}<small>Peace · ${left}</small></span>` : wars.length ? `<span class="chip warn btn-like" onclick="openRelations()" title="${esc(tip)}">${ico('swords')}<small>War · ${wars.length}</small></span>` : `<span class="chip peace btn-like" onclick="openRelations()" title="${esc(tip)}">${ico('dove')}<small>Peace</small></span>`); }
@@ -65,8 +66,51 @@ function renderHeader() {
       <button class="btn sm desk ibtn" onclick="openLog()" title="Chronicle" style="position:relative">${ico('scroll')}${G.unread ? `<span style="position:absolute;top:-4px;right:-4px;background:#b8342c;color:#fff;border-radius:9px;font-size:10px;padding:1px 5px">${G.unread}</span>` : ''}</button>
       <button class="btn sm ibtn" onclick="openSaves()" title="Save / load">${ico('chest')}</button>
       <button class="btn sm ibtn" onclick="openSettings()" title="Settings">${ico('gear')}</button>
-      <button class="btn sm gold desk" onclick="playerEndTurn()"><span class="lbl">End turn ${ico('next')}</span></button>
+      <button class="btn sm gold desk${endTurnReady() ? ' pulse' : ''}" onclick="playerEndTurn()"><span class="lbl">End turn ${ico('next')}</span></button>
     </div>`);
+  tweenGold(F.gold);
+}
+// the treasury counts up or down to its new figure rather than jumping
+const HDR = { gold: null, raf: 0 };
+function tweenGold(to) {
+  const el = $('#hdr .chip.gold .num'); if (!el) { HDR.gold = to; return; }
+  const from = HDR.gold == null ? to : HDR.gold; HDR.gold = to;
+  cancelAnimationFrame(HDR.raf);
+  if (from === to || !SET.motion) { el.textContent = to; return; }
+  const chip = el.closest('.chip'); chip.classList.remove('up', 'down'); void chip.offsetWidth; chip.classList.add(to > from ? 'up' : 'down');
+  const t0 = performance.now(), dur = Math.min(700, 250 + Math.abs(to - from) * 4);
+  const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(from + (to - from) * e); if (k < 1) HDR.raf = requestAnimationFrame(step); };
+  HDR.raf = requestAnimationFrame(step);
+}
+
+// ================= THE TURN STRIP =================
+// what the turn still asks of the player, in one line: armies yet to move, the goal, and anything waiting
+function armiesToMove() { return usableArmies(me()).filter(a => !a.acted && a.mp > 0 && armySize(a) > 0 && a.loc && slotState(a) !== 'captive'); }
+function nextArmy() {
+  const list = armiesToMove(); if (!list.length) return toast('Every army has moved', 'sword');
+  const i = list.findIndex(a => a.id === G.army), a = list[(i + 1) % list.length];
+  G.army = a.id; sfx('click'); render(); focusProv(a.loc, Math.min(VIEW.w, isPhone() ? 460 : 620));
+}
+function goalProgress() {
+  if (goalId() === 'king') { const h = domainHeld(me()), n = domainNeed(); return { f: clamp(h / n, 0, 1), t: `${h}/${n} counties`, done: h >= n && undisputed(me()) && wears(me()) }; }
+  const all = G.fdefs.filter(d => FACMAP[d.id] && d.id !== me()).length, left = alive().length - 1;
+  return { f: clamp(1 - left / Math.max(1, all), 0, 1), t: `${left} house${left === 1 ? '' : 's'} left`, done: left === 0 };
+}
+function turnStrip() {
+  const F = G.fac[me()], mv = armiesToMove(), g = goalProgress();
+  const waiting = [];
+  if (G.diplo) waiting.push(['handshake', `${FAC(G.diplo.from).name}'s envoy waits`, "G.sel=null;render();setSheet('full');document.getElementById('envoybox')&&document.getElementById('envoybox').scrollIntoView({behavior:'smooth'})"]);
+  if (G.offers.length) waiting.push(['coin', `${G.offers.length} ransom offer${G.offers.length > 1 ? 's' : ''}`, "toggleAcc('prisoners')"]);
+  if (F.unrest && !unrestCovered(me())) waiting.push(['fire', `Unrest at ${P(F.unrest.seed).name}`, `goProv('${F.unrest.seed}')`]);
+  if (fairOpen()) waiting.push(['market', 'The fair is open', 'openFair()']);
+  const armies = F.captive && !mv.length ? `<span class="ts-i bad">${ico('chain')}Your lord is held</span>`
+    : mv.length ? `<button class="ts-i act" onclick="nextArmy()">${ico('sword')}<b>${mv.length}</b> ${mv.length === 1 ? 'army' : 'armies'} to move <span class="go">${ico('next')}</span></button>`
+    : `<span class="ts-i done">${ico('check')}All armies moved</span>`;
+  return `<div class="tstrip${mv.length ? '' : ' ready'}">
+    ${armies}
+    <div class="ts-goal" onclick="openRoad()" title="The road to ${esc(GOALS[goalId()].n)}">${ico('crown')}<div class="bar"><i style="width:${Math.round(g.f * 100)}%"></i></div><small>${g.t}</small></div>
+    ${waiting.map(w => `<button class="ts-i warn" onclick="${w[2]}">${ico(w[0])}${esc(w[1])}</button>`).join('')}
+  </div>`;
 }
 
 // ================= SHARED FRAGMENTS =================
@@ -192,7 +236,7 @@ function unrestBox(p) {
 function envoyBox() {
   const D = G.diplo; if (!D) return '';
   const nm = FAC(D.from).name;
-  return `<div class="notebox good">${ico('handshake')} <b>An envoy from ${nm}.</b> ${D.kind === 'pact' ? `${rulerOf(D.from)} offers a marriage between the houses${D.gift ? ` with ${D.gift} d in gifts` : ''}: peace for ${PACT_TURNS} turns.` : `${rulerOf(D.from)} proposes a joint war on ${FAC(D.target).name}${D.gift ? `, with ${D.gift} d to seal it` : ''}: peace between you for ${JOINT_TURNS} turns while ${nm} turns its armies on ${FAC(D.target).name}.`} The envoy leaves at the end of the turn.
+  return `<div class="notebox good" id="envoybox">${ico('handshake')} <b>An envoy from ${nm}.</b> ${D.kind === 'pact' ? `${rulerOf(D.from)} offers a marriage between the houses${D.gift ? ` with ${D.gift} d in gifts` : ''}: peace for ${PACT_TURNS} turns.` : `${rulerOf(D.from)} proposes a joint war on ${FAC(D.target).name}${D.gift ? `, with ${D.gift} d to seal it` : ''}: peace between you for ${JOINT_TURNS} turns while ${nm} turns its armies on ${FAC(D.target).name}.`} The envoy leaves at the end of the turn.
     <div class="grid2"><button class="btn gold sm" onclick="doDiplo('${D.id}',true)">Accept</button><button class="btn sm" onclick="doDiplo('${D.id}',false)">Decline</button></div></div>`;
 }
 
@@ -214,11 +258,11 @@ function overviewPanel() {
     <div class="tile" onclick="openCourt()">${ico('fleur')}<div class="v">${F.gens.length}</div><div class="k">Generals</div></div>
   </div>`;
   const prisoners = prisonersHtml();
-  return `<div class="phead">${shield(me(), 46)}<div><h2>${esc(rulerOf(me()))}</h2><span class="sub">${esc(f.trait || (f.realm === 'Rebel' ? 'A rebel house, risen in civil war.' : ''))}</span></div></div>
+  return `${turnStrip()}<div class="phead">${shield(me(), 46)}<div><h2>${esc(rulerOf(me()))}</h2><span class="sub">${esc(f.trait || (f.realm === 'Rebel' ? 'A rebel house, risen in civil war.' : ''))}</span></div></div>
     ${tiles}
     ${unrestBox()}${envoyBox()}${fairOpen() ? `<div class="notebox good">${ico('market')} <b>${SC.fair.open}</b> this turn only. Your carts are worth about ${fairCap()} d there.<div class="row" style="margin-top:6px"><button class="btn gold sm" onclick="openFair()"><span class="lbl">${ico('market')}Go to the fair</span></button></div></div>` : ''}
     ${F.captive ? `<div id="ransombox"><div class="notebox bad">${ico('chain')} ${rulerOf(me())} is a prisoner${F.captive.by ? ' of ' + fname(F.captive.by) : ''}. His host cannot take the field until he is ransomed; your generals' armies still can.</div>${ransom}</div>` : ''}
-    ${prisoners ? acc('prisoners', 'Your prisoners', 'chain', prisoners, G.offers.length ? G.offers.length + ' offer' + (G.offers.length > 1 ? 's' : '') : '') : ''}
+    <div class="accs">${prisoners ? acc('prisoners', 'Your prisoners', 'chain', prisoners, G.offers.length ? G.offers.length + ' offer' + (G.offers.length > 1 ? 's' : '') : '') : ''}
     ${acc('garrisons', 'Your garrisons', 'castle', garrisonsHtml(), owned(me()).reduce((a, p) => a + garMen(p), 0) + ' men')}
     ${acc('armies', 'Your armies', 'sword', armiesHtml() + `<p class="sub">Garrisons cost nothing. An army on campaign is paid every turn (foot ${UPKEEP.foot}, bow ${UPKEEP.bow}, horse ${UPKEEP.cav}, catapult ${UPKEEP.cat} d); after a full turn at rest in a castle of yours it is lodged free. Upkeep now ${upkeepOf(me())} d against ${grossIncome(me())} d of income. If the treasury runs dry, men desert.</p>`, `${men} men · ${upkeepOf(me())} d`)}
     ${acc('road', 'Your goal: ' + GOALS[goalId()].n, 'crown', goalHtml(held), goalCount(held))}
@@ -232,9 +276,10 @@ function overviewPanel() {
       <p>Allied lords: ${allies(me()).length ? allies(me()).map(p => `<span class="tag" onclick="goProv('${p.id}')" style="cursor:pointer">${p.name}</span>`).join('') : '<span class="sub">none</span>'}</p>
       ${G.truces.filter(t => t.a === me() || t.b === me()).map(t => `<p>${ico('dove')} ${t.pact ? 'Peace' : 'Truce of God'} with ${fname(t.a === me() ? t.b : t.a)} until ${dateStr(t.until)}</p>`).join('')}`)}
     ${acc('houses', 'Other houses', 'people', `<div class="rivals">${rivals.map(id => { const R = G.fac[id], d = FAC(id); return `<div class="rival${R.alive ? '' : ' dead'}" onclick="${R.alive ? `goProv('${homeOf(id)}')` : ''}">${shield(id, 24)}<div style="min-width:0"><b>${esc(d.name)}</b>${d.realm === 'Rebel' ? ' <span class="tag red">rebels</span>' : ''}${isKing(id) ? ' <span class="tag on">king</span>' : ''}${allied(me(), id) ? ' <span class="tag on">ally</span>' : ''}<div class="sub" style="font-size:13px">${R.alive ? `${esc(rulerOf(id))}${R.excom ? ' · <span class="bad">excommunicated</span>' : ''}${R.captive ? ' · <span class="bad">lord captive</span>' : ''}${allied(me(), id) ? ' · your ally' : atPeace(me(), id) ? ' · at peace with you' : atWar(me(), id) ? ' · <span class="bad">at war with you</span>' : ''} · ${attWord(attitude(id, me())).toLowerCase()}${R.fallen ? ' · rallied once' : ''}` : 'destroyed'}</div></div>${R.alive ? `<div class="pw"><b>${owned(id).length} counties</b>armies ${usableArmies(id).map(a => armySize(a)).join('+') || '0'}</div>` : ''}</div>`; }).join('')}</div>`, `${alive().length - 1} standing`)}
+</div>
     <p class="hint" style="margin-top:14px">Tap a county. Pinch or scroll to zoom, drag to pan, double-tap to zoom in. Green dots mark where the chosen army can march; red dashes mark what it can strike this turn.</p>
     <p class="sub ctr">Rivals: ${diff().n.toLowerCase()} · ${G.turn} turn${G.turn === 1 ? '' : 's'} played</p>
-    <div class="row"><button class="btn sm" onclick="openSaves()"><span class="lbl">${ico('chest')}Save / load</span></button><button class="btn sm" onclick="openHelp()"><span class="lbl">${ico('info')}How to play</span></button><button class="btn sm" onclick="homeView(true)"><span class="lbl">${ico('home')}Find my lands</span></button><button class="btn sm ghost" onclick="confirmNew()">New game</button></div>`;
+    <div class="row"><button class="btn sm" onclick="openSaves()"><span class="lbl">${ico('chest')}Save / load</span></button><button class="btn sm gold" onclick="openRoad()" style="position:relative"><span class="lbl">${ico('crown')}The road</span>${(() => { try { const n = roadErrands().filter(e => e.hot).length; return n ? `<span class="badge">${n}</span>` : ''; } catch (e) { return ''; } })()}</button><button class="btn sm" onclick="openHelp()"><span class="lbl">${ico('info')}How to play</span></button><button class="btn sm" onclick="homeView(true)"><span class="lbl">${ico('home')}Find my lands</span></button><button class="btn sm ghost" onclick="confirmNew()">New game</button></div>`;
 }
 
 // progress toward the goal chosen at the start
@@ -293,7 +338,7 @@ function provHead(p) {
   if (p.sacked > 0) tags.push(`<span class="tag red">${ico('fire')}sacked: pays nothing for ${p.sacked} turn${p.sacked > 1 ? 's' : ''}</span>`);
   if (p.interdict > 0) tags.push(`<span class="tag red">${ico('interdict')}interdict, ${p.interdict} turn${p.interdict > 1 ? 's' : ''}</span>`);
   if (p.heiress && !p.owner) tags.push(`<span class="tag">${ico('ring')}Lady ${p.heiress}</span>`);
-  h += `<p style="margin:0 0 4px">${tags.join('')}</p>`;
+  h += `<p class="ptags" style="margin:0 0 4px">${tags.join('')}</p>`;
   if (!holds(me(), p.id)) h += wealthCard(p);
   if (p.cap && p.cap !== p.owner && FAC(p.cap)) h += `<p class="sub">Former seat of ${FAC(p.cap).name}</p>`;
   const why = SC.crown.why[p.id];
@@ -576,8 +621,16 @@ function render() {
   let h;
   if (G.sel && G.sel[0] === 'p') h = provPanel(P(G.sel.slice(2)));
   else h = overviewPanel();
-  setHTML($('#pbody'), h);
+  const pb = $('#pbody'); setHTML(pb, h);
+  { const key = G.sel || 'ov'; if (pb.dataset.key !== key) { pb.dataset.key = key; if (SET.motion) { pb.classList.remove('swap'); void pb.offsetWidth; pb.classList.add('swap'); } pb.scrollTop = 0; } }
+  pb.classList.toggle('prov', !!(G.sel && G.sel[0] === 'p')); pb.classList.toggle('ov', !G.sel);
+  // on a tablet the main action sits in its own footer under the scrolling panel
+  let foot = $('#pfoot'); if (!foot) { foot = document.createElement('div'); foot.id = 'pfoot'; $('#panel').appendChild(foot); }
+  foot.innerHTML = '';
+  if (isTablet()) { const c = pb.querySelector('.cta'); if (c) foot.appendChild(c); }
   renderTutor();
+  if (G.turn >= 2 && !G.sel) setTimeout(() => hint('road'), 1200);
+  if (isTablet() && G.turn >= 1) setTimeout(() => hint('tablet'), 4000);
 }
 
 // ================= ACTIONS =================
@@ -636,6 +689,12 @@ function doCrown(k) { if (crown(me(), k)) { G.reports = G.reports.filter(r => r.
 function doPact(f) { const r = marriagePact(me(), f); if (r) { sfx(r.ok ? 'bell' : 'miss'); report(r.ok ? 'A marriage pact' : 'Proposal refused', r.text); save(); render(); showReports(); } }
 
 // ================= END OF TURN =================
+// a line at the start of each turn: the season, what the treasury did, and how many armies stand ready
+function turnToast(gold0) {
+  if (G.over) return;
+  const F = G.fac[me()], d = F.gold - gold0, n = armiesToMove().length;
+  toast(`${dateStr(G.turn)} · ${d >= 0 ? '+' : '−'}${Math.abs(d)} d · ${n ? `${n} ${n === 1 ? 'army' : 'armies'} ready` : F.captive ? 'your lord is held' : 'no army can march'}`, 'scroll', 3200);
+}
 function playerEndTurn(force) {
   if (G.over) return;
   const F = G.fac[me()];
@@ -669,5 +728,6 @@ function playerEndTurn(force) {
   G.unread = (G.unread || 0) + fresh.length;
   G.sel = null; G.endWarned = false;
   save();
-  runTurnOverlay(G.order, lines, () => { render(); sfx('bell'); buzz(20); if (isPhone()) setSheet('peek'); showReports(); if (G.turn === TRUCE) hint('endturn'); }, snap);
+  const gold0 = F.gold;
+  runTurnOverlay(G.order, lines, () => { render(); sfx('bell'); buzz(20); if (isPhone()) setSheet('peek'); showReports(); if (G.turn === TRUCE) hint('endturn'); turnToast(gold0); }, snap);
 }

@@ -1,4 +1,42 @@
-# Anointed 1.0.2
+# Anointed 1.3.0
+
+## 1.3.0 — the field, again, and a polish of the interface (Nov 2026)
+No rule, number or text of play changed.
+
+- **Every figure throws a shadow** that falls away from the sun (or softly, under rain). Sprites are drawn at twice the detail: helmets with a ridge and a nasal, faces shaded, a boss and a rim-light on each kite shield, cloaks on the horsemen, a three-beat stride, and bowmen who nock, draw and loose. The figure and its shadow are baked together at a few fixed sizes, so each man on the field is still one draw.
+- **The camera** opens close on the field and pulls back as the titles fade; the first clash is held for a moment in slow motion, with the camera pushed in and the device buzzing once. While the camera rests the canvases carry no transform at all.
+- **At the walls:** stones that strike throw rubble that bounces and settles, with dust; after dusk the defenders' arrows burn; the horse tramples the grass where it has passed; spent arrows stay in the ground.
+- **At the end:** the victor's standard rises in a shaft of light over the field; a lost field has crows crossing it.
+- **Interface:** a ruled header with a fleuron under the ruler's name; hover and press states on tiles, chips, tabs, segments, buttons and the dock; accordions open with a short settle; toasts and hints with a gilt edge; a tidier scrollbar where one shows. The dialog blur is dropped behind scenes with a canvas (it was costing a repaint of the whole map every frame — the battle now runs within a third of Jeff's original flat scene's cost, where before it was over twice).
+- Top-down scenes (the raid, the mine) draw figures without cast shadows, as they should from above.
+
+Service worker `VERSION` → `anointed-1.3.0`.
+
+
+## 1.2.0 — three more visual passes, each followed by a layout audit (Nov 2026)
+Again no rule, number or text of play changed.
+
+- **Audit.** An automated pass over every screen (realm, county tabs, court, church, envoys, relations, treasury, fair, courtship, road, settings, help, saves, chronicle, pre-battle, battle, reports, stats) at iPhone, iPad portrait and desktop sizes, looking for overlapping or clipped text, elements off the viewport and console errors; plus 15–30-turn soaks on all three maps and a twelve-battle sweep with random seasons, hours and weather. Fixed: the battle HUD on an upright phone (names clipped, stance under the phase — now one trimmed row that fits the screen); the road's station names touching (they now alternate above and below the road).
+- **Pass 8.** County colours laid on as washes (lighter where the light falls) so the map reads as painted; the eve-of-battle card opens on the two camps at dusk — tents, fires with drifting embers, both standards, stars; motes of dust drift through the title screen's light.
+- **Pass 9.** Weather on the field: rain on about one day in five (grey sky, streaks across the scene, darkened ground), mist at dawn and in autumn; spent arrows stay in the ground where they fell.
+- **Pass 10.** The army bar bears your arms on the lord's host and a fleur on a general's; *The road* button carries a badge with the count of pressing errands; two new first-time hints (the goal bar opens the road; on an iPad, drag the handle to resize); a gilt frame around the map on wide screens.
+
+Service worker `VERSION` → `anointed-1.2.0`.
+
+
+## 1.1.0 — seven passes of design, by the studio (Nov 2026)
+No rule, number or text of play was changed. Every pass is presentation, flow or a new way of seeing what the rules already offer.
+
+1. **Made for iPad.** A third layout, *tablet* (`body.t`): on an iPad held upright the map sits above a fixed panel whose handle drags it between a third and two-thirds of the screen; the realm view runs six tiles across and two columns of sections; dialogs are centred cards; the dock, chips and army bar are sized for the hand. Landscape keeps the sidebar. Settings → Layout now offers Auto / Phone / Tablet / Desktop. (`view.js detectLayout/applyLayout`, `style.css` "Tablet held upright")
+2. **Flow.** A *turn strip* at the top of the realm view (and in the phone sheet's peek): armies still to move, with a Next button that cycles and centres them; the goal as a progress bar; anything waiting (envoy, ransom offers, unrest, the fair). The treasury chip counts up or down to its new figure and shakes when silver is short; a one-line toast opens each turn (season, income, armies ready); the panel's content slides in when the selection changes; the desktop End-turn button pulses when every army has moved. (`panels.js turnStrip/nextArmy/tweenGold/turnToast`)
+3. **Illumination.** Pennons on the map carry each house's arms; castles are shaded with courses, gates and shadow; embossed buttons; dialogs blur the room behind them and carry gilt corner-work; reports open with an illuminated initial; the dock and tabs take a brass edge. (`map.js pennonCharge/castleIcon`, `style.css` "Pass 3")
+4. **The Field.** The battle scene is repainted as a three-quarter view with a horizon: a sky that knows the season and the hour, hills and a spire on the skyline, ground that recedes, trees at the margins, snow and leaves in their seasons; figures with mail, kite shields in the house's colours, helmets, bows that draw, horses that gallop in four beats under caparisons; standards that ripple; walls that stand up from the plan — palisade, stone and great stone, towers, gate, moat, a keep with lit windows; ladders at the walls when the lines reach them; dust, volleys with shadows, flashes of steel; a camera that eases in on the clash; phase titles and a VICTORY / DEFEAT flourish written on the scene itself. The field is a second canvas drawn once, so each frame only redraws what moves. The battle model is untouched. (`battlescene.js`, `battleview.js`)
+5. **The smaller scenes, repainted.** The Northmen's raid (deep water, surf, dunes, fields, a village with thatch and a church, longships with dragon prows, shields and striped sails, oars that row, cottages that burn under rising smoke); the mine (strata, roots, a lamp-lit tunnel, the camp above); the charter (an illuminated border, a rubric, the quill in hand, a wax seal pressed with your arms). (`scenery.js`)
+6. **Rooms.** The court, the Church, the envoys' parley, the fair and a courtship each open on a painted scene — the great hall with your banners and a hearth, the basilica's golden apse with incense, striped pavilions on a meadow with both standards, a market square with awnings, bunting and a crowd, a walled garden with roses, a fountain and doves. The dialogs below them are unchanged. (`backdrops.js`)
+7. **The road.** A new scene, *The road to the crown*, from the turn strip's goal bar or the realm view's footer: the campaign as an illuminated itinerary, with the goal's own conditions as stations along it (a host, the Church, the coronation, the royal seats, half the kingdom, no rival too strong), each a ring that fills; and below it *Errands this turn* — every opening the rules already offer right now (an envoy waiting, ransom offers, unrest, the fair, generals for hire, an heiress of age, a charter to forge, armies yet to move, idle silver), each a card that goes straight to it. (`road.js`)
+
+Service worker `VERSION` → `anointed-1.1.0`; the four new scripts are precached. Save format unchanged (`crownOfTheFranks987v8`).
+
 
 Version 1.0 is the first release under the Anointed name (it was v6.50 in development). The notes below keep the development history.
 

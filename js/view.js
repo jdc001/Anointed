@@ -12,11 +12,15 @@ function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringif
 
 // ---------- layout ----------
 const LAYOUT = { mode: 'd' };
+// three layouts: 'm' a phone (map with a sliding sheet), 't' a tablet held upright (map above a fixed panel),
+// 'd' a desktop or a tablet on its side (map with a sidebar)
 function detectLayout() {
   if (SET.layout === 'phone') return 'm';
   if (SET.layout === 'desktop') return 'd';
+  if (SET.layout === 'tablet') return 't';
   const w = window.innerWidth, h = window.innerHeight;
   const coarse = matchMedia('(pointer: coarse)').matches;
+  if (coarse && Math.min(w, h) >= 700 && h > w) return 't';
   return (w < 760 || (coarse && w < 1000 && h > w)) ? 'm' : 'd';
 }
 function applyLayout() {
@@ -24,13 +28,16 @@ function applyLayout() {
   const changed = m !== LAYOUT.mode;
   LAYOUT.mode = m;
   document.body.classList.toggle('m', m === 'm');
+  document.body.classList.toggle('t', m === 't');
   document.body.classList.toggle('d', m === 'd');
   document.body.classList.toggle('nomotion', !SET.motion);
+  document.documentElement.style.setProperty('--panel-h', Math.round(clamp(SET.panelH || 0.44, 0.28, 0.66) * 100) + '%');
   if (changed && typeof applyView === 'function' && mapEl) applyView();
-  if (m === 'd') $('#panel').classList.remove('half', 'full', 'hid');
+  if (m !== 'm') $('#panel').classList.remove('half', 'full', 'hid');
   renderDock();
 }
 const isPhone = () => LAYOUT.mode === 'm';
+const isTablet = () => LAYOUT.mode === 't';
 
 // ---------- haptics ----------
 function buzz(ms = 12) { if (SET.sfxOn && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { } } }
@@ -38,6 +45,7 @@ function buzz(ms = 12) { if (SET.sfxOn && navigator.vibrate) { try { navigator.v
 // ---------- bottom sheet ----------
 const SHEET = { state: 'peek' };
 function setSheet(state) {
+  if (isTablet()) return;
   SHEET.state = state;
   const p = $('#panel');
   p.classList.remove('half', 'full', 'hid', 'peek');
@@ -81,9 +89,17 @@ function initSheet() {
     else s = y < h * 0.25 ? 'full' : y < h * 0.72 ? 'half' : 'peek';
     setSheet(s);
   };
-  grip.addEventListener('pointerdown', e => { start(e, false); grip.setPointerCapture(e.pointerId); });
+  // on a tablet the grip resizes the panel instead of sliding it
+  let tdrag = null;
+  grip.addEventListener('pointerdown', e => {
+    if (isTablet()) { const main = $('#main').getBoundingClientRect(); tdrag = { y0: e.clientY, h0: p.getBoundingClientRect().height, H: main.height }; grip.setPointerCapture(e.pointerId); document.body.classList.add('resizing'); return; }
+    start(e, false); grip.setPointerCapture(e.pointerId);
+  });
+  grip.addEventListener('pointermove', e => { if (!tdrag) return; const f = clamp((tdrag.h0 - (e.clientY - tdrag.y0)) / tdrag.H, 0.28, 0.66); document.documentElement.style.setProperty('--panel-h', (f * 100).toFixed(1) + '%'); SET.panelH = f; });
+  const tend = () => { if (!tdrag) return; tdrag = null; document.body.classList.remove('resizing'); saveSettings(); if (G) applyView(); };
+  grip.addEventListener('pointerup', tend); grip.addEventListener('pointercancel', tend);
   grip.addEventListener('pointermove', move); grip.addEventListener('pointerup', end); grip.addEventListener('pointercancel', end);
-  grip.addEventListener('click', () => { if (!isPhone()) return; setSheet(SHEET.state === 'peek' ? 'half' : SHEET.state === 'half' ? 'full' : 'peek'); });
+  grip.addEventListener('click', () => { if (isTablet()) { const f = (SET.panelH || 0.44) < 0.5 ? 0.62 : 0.44; SET.panelH = f; saveSettings(); document.documentElement.style.setProperty('--panel-h', Math.round(f * 100) + '%'); setTimeout(() => { if (G) applyView(); }, 320); return; } if (!isPhone()) return; setSheet(SHEET.state === 'peek' ? 'half' : SHEET.state === 'half' ? 'full' : 'peek'); });
   body.addEventListener('pointerdown', e => { if (e.target.closest('button,a,input')) return; start(e, true); });
   body.addEventListener('pointermove', move, { passive: false }); body.addEventListener('pointerup', end); body.addEventListener('pointercancel', end);
 }
@@ -100,7 +116,7 @@ function makeLayer(w, h, dpr, fn) { const c = document.createElement('canvas'); 
 // is used up, new canvases are drawn without the GPU and crawl. So a scene's canvases are emptied the moment it ends.
 function releaseScene(S) {
   if (!S) return;
-  for (const k of ['ground', 'vig', 'corpC', 'sky', 'land', 'dusk', 'glowS']) if (S[k]) { S[k].width = S[k].height = 0; S[k] = null; }
+  for (const k of ['ground', 'vig', 'corpC', 'sky', 'land', 'dusk', 'glowS', 'bgc']) if (S[k]) { S[k].width = S[k].height = 0; S[k] = null; }
   if (S.ctx && S.ctx.canvas) { S.ctx.canvas.width = S.ctx.canvas.height = 0; }
   S.ctx = S.corpX = null;
 }
@@ -115,9 +131,11 @@ const modalOpen = () => !$('#modal').classList.contains('hidden');
 $('#modal').addEventListener('pointerdown', e => { if (e.target === e.currentTarget && $('#mcard').dataset.dismiss === '1') closeModal(); });
 
 // ---------- toast ----------
-function toast(t, icon) {
+function toast(t, icon, ms) {
   const el = $('#toast'); el.innerHTML = (icon ? ico(icon) : '') + esc(t); el.classList.add('show');
-  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2000);
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), ms || 2000);
+  // a want of silver shakes the treasury chip, so the eye goes to the number
+  if (icon === 'coin' && /^not enough|cannot afford|too poor|costs?\b/i.test(t)) { const c = $('#hdr .chip.gold'); if (c) { c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); sfx('click'); } }
 }
 
 // ---------- drawer ----------
@@ -232,6 +250,8 @@ function toggleAcc(id) { if (id === 'road') { tutorDid('goal'); setTimeout(rende
 
 // ---------- hints ----------
 const HINTS = {
+  road: { t: 'The road to the crown', b: 'The bar at the top of the realm view is your goal. Tap it for the road: each condition as a station, and every errand the turn offers you.' },
+  tablet: { t: 'Map or panel', b: 'Drag the handle between the map and the panel to give either more room. Tap it to jump between the two sizes.' },
   start: { t: 'Your capital', b: 'Tap your capital to raise troops, build, and move men between garrison and army. Green dots mark where your army can march; red dashes mark what it can strike.' },
   firstSel: { t: 'The county sheet', b: 'Drag the sheet up for everything you can do here. The main action always sits at the bottom.' },
   peace: { t: SC.peace.Name, b: `No war between the great houses until ${dateStr(TRUCE)}. Use the time to build farms and markets, win minor lords, and gather an army.` },
