@@ -1,4 +1,8 @@
-# Anointed 1.5.0
+# Anointed 1.5.1
+
+## 1.5.1: The road to Rome
+- In the Empire, a computer house that takes Mainz or Aachen now makes Rome its main aim. Its strongest host heads south and only stops for fights that bring it nearer Rome, unless nothing on the road can be taken. The house's other armies value Rome and the counties on the way. The aim lasts ten turns after Mainz or Aachen is lost, and for good once the house is crowned King of the Romans.
+- In 12-game test runs, Rome changed hands 119 times against 23 before, and games that stalled with no winner fell from 7 in 12 to 2.
 
 ## 1.5.0: Marriage alliances and the replay map
 - **Marriage on any county's diplomacy tab.** Next to the alliance and the forged charter, you can wed a son to a lesser lord's daughter. The lord swears to you just as an ally would, for a dowry of about two-fifths of the alliance price, and it costs you a son. One marriage a turn, and church lands and free communities have no daughter to give. Counties with an heiress still offer the full courtship, and the tab lists the nearest heiresses.

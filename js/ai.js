@@ -302,12 +302,19 @@ function aiAssault(fid, A, p) {
   } else if (mine) report(`${p.name} holds!`, `${FAC(fid).name} ${verb} ${p.name} and was thrown back. Defenders lost ${lossStr(d0, res.D)}; they lost ${lossStr(a0, res.A)}.`);
 }
 // march one step toward the nearest frontier county (or a coast on an open lane)
-function stepToward(fid, A) {
+function stepToward(fid, A, goal) {
   if (!A.loc || A.acted) return false;
   const isFront = id => ADJ[id].some(n => !holds(fid, n) && !(P(n).owner && atPeace(fid, P(n).owner)));
-  if (isFront(A.loc)) return false;
   const seen = { [A.loc]: null }, q = [A.loc]; let target = null;
-  while (q.length && !target) { const c = q.shift(); for (const n of ADJ[c]) if (!(n in seen) && holds(fid, n)) { seen[n] = c; if (isFront(n)) { target = n; break; } q.push(n); } }
+  if (goal) {
+    // a host with a far goal (Rome) walks through its own and its friends' land to the spot nearest the goal
+    const far = id => HOPS[goal][id] ?? 99; let bd = far(A.loc);
+    while (q.length) { const c = q.shift(); for (const n of ADJ[c]) if (!(n in seen) && holds(fid, n)) { seen[n] = c; q.push(n); if (far(n) < bd) { bd = far(n); target = n; } } }
+    if (!target) return isFront(A.loc) ? false : stepToward(fid, A);
+  } else {
+    if (isFront(A.loc)) return false;
+    while (q.length && !target) { const c = q.shift(); for (const n of ADJ[c]) if (!(n in seen) && holds(fid, n)) { seen[n] = c; if (isFront(n)) { target = n; break; } q.push(n); } }
+  }
   if (!target) return false;
   let k = target; const path = []; while (k && k !== A.loc) { path.unshift(k); k = seen[k]; }
   const dest = path[Math.min(path.length, MOVES) - 1];
@@ -355,9 +362,20 @@ function aiWar(fid, A) {
   const missSeats = endgame ? winSeats(fid).filter(id => !seatHeld(fid, id)) : [];
   const blockers = endgame ? alive().filter(o => o !== fid && domainHeld(o) > rivalCap()) : [];
   // the last step: with everything else in hand and one seat missing, the strongest host marches for it (Rome, say)
-  const lastSeat = endgame && missSeats.length === 1 && domainHeld(fid) >= domainNeed() * 0.9 && A === strongestArmy(fid) ? missSeats[0] : null;
+  let lastSeat = endgame && missSeats.length === 1 && domainHeld(fid) >= domainNeed() * 0.9 && A === strongestArmy(fid) ? missSeats[0] : null;
+  // the road to Rome: in the Empire, a house that holds Mainz or Aachen makes Rome its great aim. Its strongest host
+  // marches south whatever else is going on, and every army values Rome and the counties on the way
+  const romeId = SC.rome && winSeats(fid).includes(SC.rome) && !(SC.passive && SC.passive(fid)) ? SC.rome : null;
+  // the aim outlasts a lost Mainz by ten turns, and lasts for good once the house is crowned King of the Romans
+  if (romeId && winSeats(fid).some(id => id !== romeId && P(id).owner === fid)) F.romeAt = G.turn;
+  const romeQuest = romeId && !seatHeld(fid, romeId) && (G.turn - (F.romeAt ?? -99) <= 10 || wears(fid));
+  const romeHost = romeQuest && A === usableArmies(fid).filter(a => a.id !== F.guard).sort((x, y) => armyPowA(fid, y) - armyPowA(fid, x))[0];
+  const rf = Math.max(0.8, fin);
+  if (romeHost && !lastSeat) lastSeat = romeId;
   let best = null, bs = -1, bestS = null;
   const hitP = G.hitP = G.hitP || {};
+  // the host bound for Rome first looks only at what brings it nearer; if nothing does, it fights like any other
+  for (const pass of romeHost ? [1, 0] : [0]) { if (best) break;
   for (const p of provList()) {
     const s = strikeFrom(fid, A, p);
     if (!s) continue;
@@ -368,6 +386,8 @@ function aiWar(fid, A) {
     if (vsPlayer && grace && p.owner === G.player) continue;
     // no pile-on: once enough houses are already at the player, others wait their turn, unless the player leads the kingdom or they are sworn to war on him
     if (p.owner === G.player && !(hitP[fid] >= G.turn - 3) && leader !== G.player && !(F.warOn && F.warOn.target === G.player) && Object.keys(hitP).filter(f => f !== fid && hitP[f] >= G.turn - 3 && G.fac[f] && G.fac[f].alive).length >= (D.pile || 2)) continue;
+    // the host bound for Rome turns aside for nothing that does not bring it nearer
+    if (pass && p.id !== romeId && (HOPS[romeId][p.id] ?? 99) >= (HOPS[romeId][A.loc] ?? 99)) continue;
     const ratio = ap / defPow(p);
     const cap = isCap(p);
     const kin = p.owner && !foreign(p.owner) && !foreign(fid);
@@ -376,7 +396,8 @@ function aiWar(fid, A) {
     let need = Math.max(1.05, base - 0.06 * A.idle) - (few ? 0.3 : 0) + 0.25 * atP;
     if (ambitious && crownNeeds(fid).includes(p.id)) need = Math.max(1.05, need - 0.3);
     if (missSeats.includes(p.id)) need = Math.max(1.05, need - 0.35 * fin);
-    else if (lastSeat && (HOPS[lastSeat][p.id] ?? 99) < (HOPS[lastSeat][A.loc] ?? 99)) need = Math.max(1.05, need - 0.3 * fin);
+    else if (romeQuest && p.id === romeId) need = Math.max(1.05, need - 0.35 * rf);
+    else if (lastSeat && (HOPS[lastSeat][p.id] ?? 99) < (HOPS[lastSeat][A.loc] ?? 99)) need = Math.max(1.05, need - 0.3 * (lastSeat === romeId ? rf : fin));
     else if (p.owner && blockers.includes(p.owner) && KPROV[p.id]) need = Math.max(1.05, need - 0.15 * fin);
     const canSiege = p.b.castle && armySize(A) >= (p.owner ? 12 : 7) && ap >= power(defenders(p)) * (cap ? 2.4 : p.owner ? 1.1 : 0.9) * (vsPlayer ? 1 + D.pNeed * 0.4 : 1);
     if (ratio < need && !canSiege) continue;
@@ -388,7 +409,9 @@ function aiWar(fid, A) {
     if (missSeats.includes(p.id)) val = (val + 10) * (1 + 2 * fin);
     // every step that brings the host nearer a missing seat is worth more, however far it is
     else if (missSeats.length) { const m = missSeats.slice().sort((x, y) => (HOPS[x][A.loc] ?? 99) - (HOPS[y][A.loc] ?? 99))[0], d = HOPS[m][p.id] ?? 9, here = HOPS[m][A.loc] ?? 9; val *= 1 + 0.8 * fin / (1 + d) + (d < here ? 0.6 * fin : 0); }
-    if (lastSeat && (HOPS[lastSeat][p.id] ?? 99) < (HOPS[lastSeat][A.loc] ?? 99)) val *= 1 + 3 * fin;
+    if (lastSeat && (HOPS[lastSeat][p.id] ?? 99) < (HOPS[lastSeat][A.loc] ?? 99)) val *= 1 + 3 * (lastSeat === romeId ? rf : fin);
+    if (romeQuest && p.id === romeId) val = (val + 12) * (1 + 2.5 * rf);
+    else if (romeQuest && !romeHost) val *= 1 + 0.5 * rf / (1 + (HOPS[romeId][p.id] ?? 9));
     if (endgame && p.owner && blockers.includes(p.owner) && KPROV[p.id]) val *= 1 + 0.9 * fin;
     if (endgame && prog < 1 && KPROV[p.id]) val *= 1 + 0.4 * fin;
     // (France only: the Empire's wrath in Lorraine. On the Empire map 'lo' is the Lombard south)
@@ -403,7 +426,8 @@ function aiWar(fid, A) {
     const sc = val * Math.min(ratio, 3) * (0.8 + Math.random() * 0.4);
     if (sc > bs) { bs = sc; best = p; bestS = s; }
   }
-  if (!best) { A.idle++; stepToward(fid, A); return; }
+  }
+  if (!best) { A.idle++; stepToward(fid, A, romeHost ? romeId : null); return; }
   A.acted = true; A.idle = 0; F.struck = true;
   if (best.owner === G.player) hitP[fid] = G.turn;
   hostility(fid, best.owner || best.ally);
