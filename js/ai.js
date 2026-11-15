@@ -61,7 +61,7 @@ const armyPowA = (fid, a) => { const b = bonus(fid); return power(armySide(a)) *
 const armyPow = fid => usableArmies(fid).reduce((s, a) => s + armyPowA(fid, a), 0);
 const strongestArmy = fid => usableArmies(fid).sort((x, y) => armyPowA(fid, y) - armyPowA(fid, x))[0] || null;
 const defPow = p => { const b = bonus(p.owner); return (power(defenders(p)) + (defenders(p).cat || 0) * 1.5) * (1 + 0.4 * wallLvl(p) + (p.b.moat && !p.ruined ? 0.25 : 0)) * (1 + 0.12 * mods(p.owner)) * (defGen(p) ? 1.15 : 1) * (1 + b.atk + b.hp * 0.8) + 0.5; };
-const STD_KNOBS = { pNeed: 0, pVal: 1, grace: 0, gang: true, pBonus: 2 };
+const STD_KNOBS = { pNeed: 0, pVal: 1, grace: 0, gang: true, pBonus: 2, finish: 1 };
 const knobs = () => (typeof diff === 'function' ? diff() : null) || STD_KNOBS;
 
 function aiTurn(fid) {
@@ -349,6 +349,11 @@ function aiWar(fid, A) {
   const warOn = F.warOn ? F.warOn.target : null;
   const wantCrown = !isKing(fid), ambitious = wantCrown && domainHeld(fid) >= CROWN_LANDS - 2;
   const goalCity = ambitious ? crownNeeds(fid).find(id => P(id).owner !== fid) : null;
+  // the endgame: a house well on its way plays for the win itself, crowned or not: the crown cities it lacks,
+  // the rivals standing over the quarter line, and the kingdom's counties it still needs
+  const fin = D.finish ?? 1, prog = domainHeld(fid) / domainNeed(), endgame = goalId() === 'king' && fin > 0 && prog >= 0.55;
+  const missSeats = endgame ? winSeats(fid).filter(id => P(id).owner !== fid) : [];
+  const blockers = endgame ? alive().filter(o => o !== fid && domainHeld(o) > rivalCap()) : [];
   let best = null, bs = -1, bestS = null;
   const hitP = G.hitP = G.hitP || {};
   for (const p of provList()) {
@@ -368,6 +373,8 @@ function aiWar(fid, A) {
     const atP = vsPlayer ? attitude(fid, G.player) : 0;
     let need = Math.max(1.05, base - 0.06 * A.idle) - (few ? 0.3 : 0) + 0.25 * atP;
     if (ambitious && crownNeeds(fid).includes(p.id)) need = Math.max(1.05, need - 0.3);
+    if (missSeats.includes(p.id)) need = Math.max(1.05, need - 0.35 * fin);
+    else if (p.owner && blockers.includes(p.owner) && KPROV[p.id]) need = Math.max(1.05, need - 0.15 * fin);
     const canSiege = p.b.castle && armySize(A) >= (p.owner ? 12 : 7) && ap >= power(defenders(p)) * (cap ? 2.4 : p.owner ? 1.1 : 0.9) * (vsPlayer ? 1 + D.pNeed * 0.4 : 1);
     if (ratio < need && !canSiege) continue;
     let val = p.base + (cap ? (G.turn < 30 ? 6 : 18) : 0) + (p.owner === G.player ? D.pBonus : 0) + (p.owner ? 1 : 0) + (p.r === SC.kingdom.core ? 4 : 0) + (p.ally ? 1 : 0);
@@ -375,6 +382,10 @@ function aiWar(fid, A) {
     // a house big enough to be anointed goes for Reims and its royal seat in earnest
     if (wantCrown && crownNeeds(fid).includes(p.id)) val = (val + 8) * (ambitious ? 3 : 1);
     else if (ambitious && goalCity) val *= 1 + 0.9 / (1 + (HOPS[goalCity][p.id] ?? 9));
+    if (missSeats.includes(p.id)) val = (val + 10) * (1 + 2 * fin);
+    else if (missSeats.length) val *= 1 + 0.8 * fin / (1 + (HOPS[missSeats[0]][p.id] ?? 9));
+    if (endgame && p.owner && blockers.includes(p.owner) && KPROV[p.id]) val *= 1 + 0.9 * fin;
+    if (endgame && prog < 1 && KPROV[p.id]) val *= 1 + 0.4 * fin;
     // (France only: the Empire's wrath in Lorraine. On the Empire map 'lo' is the Lombard south)
     if (MAP_ID === 'france' && p.r === 'lo' && !(G.start && (G.start[p.id] === fid || G.start[p.id] === 'charles'))) val *= 0.6;
     // the princes fear the Greeks: their lands are taken only when they lie in the way

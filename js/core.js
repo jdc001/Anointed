@@ -932,13 +932,19 @@ function rebel(fid) {
 // ================= THE LEAGUE OF PRINCES =================
 // When one house holds more than a quarter of the counties on the map, the other princes make common cause:
 // a truce among themselves and a war on the leader for twelve turns. The player is never pressed into it.
+// how near a house is to winning, 1 or more being there: its share of the kingdom it needs, and the crown cities it holds
+function winProgress(f) { const seats = winSeats(f); return domainHeld(f) / domainNeed() + 0.25 * seats.filter(id => P(id).owner === f).length / seats.length; }
 function maybeLeague() {
   if (G.turn - G.lastUnion < 20 || G.turn < TRUCE + 6) return;
-  const counts = alive().map(f => [f, provList().filter(p => holds(f, p.id)).length]).sort((a, b) => b[1] - a[1]);
+  // the league forms against whoever is closest to the crown: half the kingdom and its crown cities, you included
+  const counts = alive().map(f => [f, provList().filter(p => holds(f, p.id)).length, winProgress(f)]).sort((a, b) => b[2] - a[2]);
   if (counts.length < 3) return;
-  const [L, lc] = counts[0];
-  if (lc < PROV.length * (SC.league || 0.27)) return;
-  const members = alive().filter(f => f !== L && f !== G.player && !atPeace(f, L));
+  const [L, lc, prog] = counts[0];
+  if (prog < 0.85 && lc < PROV.length * (SC.league || 0.27)) return;
+  // on Gentle the houses never league against the player
+  if (L === G.player && typeof knobs === 'function' && knobs().gang === false) return;
+  // the four strongest houses not at peace with the leader swear to it
+  const members = alive().filter(f => f !== L && f !== G.player && !atPeace(f, L)).sort((a, b) => totalArmyPower(b) - totalArmyPower(a)).slice(0, 4);
   if (members.length < 2) return;
   G.lastUnion = G.turn;
   for (const f of members) { G.fac[f].warOn = { target: L, until: G.turn + 12 }; const A = lordArmy(f); if (A && A.loc && armyUsable(f, A)) { A.foot += 4; A.bow += 2; } }

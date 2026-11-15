@@ -1,4 +1,4 @@
-# Anointed 1.0.1
+# Anointed 1.0.2
 
 Version 1.0 is the first release under the Anointed name (it was v6.50 in development). The notes below keep the development history.
 
