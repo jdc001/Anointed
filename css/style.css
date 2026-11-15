@@ -906,14 +906,14 @@ body.t .scenehead { height: 190px; }
 .roadwrap { position: relative; margin: 10px 0 6px; border-radius: 10px; overflow: hidden; border: 1px solid #5e4515; box-shadow: 0 4px 14px #0005; }
 .roadwrap canvas { width: 100%; display: block; }
 .roadpins { position: absolute; inset: 0; }
-.pin { position: absolute; transform: translate(-50%, -50%); background: none; border: 0; padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; width: 150px; color: var(--ink); font-family: var(--head); }
-.pin .ring { position: relative; width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #f8eed6, #d9c59a); border: 2px solid #5e4515; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 8px #0007, inset 0 0 0 3px #fff6dd88; }
-.pin .ring i { position: absolute; inset: -5px; border-radius: 50%; background: conic-gradient(var(--gold2) calc(var(--f) * 360deg), #0000 0); -webkit-mask: radial-gradient(circle, #0000 60%, #000 62%); mask: radial-gradient(circle, #0000 60%, #000 62%); }
-.pin .ring .ic { width: 22px; height: 22px; color: var(--red); }
-.pin.done .ring { background: radial-gradient(circle at 40% 35%, #ffe9a8, #b8892c); } .pin.done .ring .ic { color: #fff8e4; }
-.pin b { margin-top: 5px; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; text-shadow: 0 1px 0 #fff8, 0 0 6px #f3e6c6; }
-.pin small { font-family: var(--body); font-style: italic; font-size: 11.5px; color: var(--ink2); line-height: 1.15; text-shadow: 0 1px 0 #fff8, 0 0 6px #f3e6c6; }
-.pin:active .ring { transform: scale(.96); }
+.roadpins .pin { position: absolute; transform: translate(-50%, -50%); background: none; border: 0; padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; width: 150px; color: var(--ink); font-family: var(--head); }
+.roadpins .pin .ring { position: relative; width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #f8eed6, #d9c59a); border: 2px solid #5e4515; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 8px #0007, inset 0 0 0 3px #fff6dd88; }
+.roadpins .pin .ring i { position: absolute; inset: -5px; border-radius: 50%; background: conic-gradient(var(--gold2) calc(var(--f) * 360deg), #0000 0); -webkit-mask: radial-gradient(circle, #0000 60%, #000 62%); mask: radial-gradient(circle, #0000 60%, #000 62%); }
+.roadpins .pin .ring .ic { width: 22px; height: 22px; color: var(--red); }
+.roadpins .pin.done .ring { background: radial-gradient(circle at 40% 35%, #ffe9a8, #b8892c); } .roadpins .pin.done .ring .ic { color: #fff8e4; }
+.roadpins .pin b { margin-top: 5px; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; text-shadow: 0 1px 0 #fff8, 0 0 6px #f3e6c6; }
+.roadpins .pin small { font-family: var(--body); font-style: italic; font-size: 11.5px; color: var(--ink2); line-height: 1.15; text-shadow: 0 1px 0 #fff8, 0 0 6px #f3e6c6; }
+.roadpins .pin:active .ring { transform: scale(.96); }
 .errands { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
 .errand { display: flex; align-items: center; gap: 10px; text-align: left; background: var(--tex), linear-gradient(#faf2dc, #e4d2a6); border: 1px solid #7d6438; border-radius: 10px; padding: 9px 10px; cursor: pointer; color: var(--ink); box-shadow: inset 0 0 0 2px #fff6dd88, 0 1px 2px #0004; font-family: var(--body); }
 .errand > .ic:first-child { width: 26px; height: 26px; color: var(--red); flex: none; }
@@ -921,7 +921,7 @@ body.t .scenehead { height: 190px; }
 .errand div { min-width: 0; } .errand b { display: block; font-family: var(--head); font-size: 13px; letter-spacing: .03em; } .errand span { display: block; font-size: 13px; color: var(--ink2); line-height: 1.25; }
 .errand.hot { border-color: var(--red2); box-shadow: inset 0 0 0 2px #fff6dd88, 0 0 0 1px #b8342c55, 0 1px 2px #0004; }
 .errand:active { transform: translateY(1px); }
-body.m .pin { width: 96px; } body.m .pin small { display: none; } body.m .pin .ring { width: 38px; height: 38px; } body.m .pin b { font-size: 9.5px; }
+body.m .roadpins .pin { width: 96px; } body.m .roadpins .pin small { display: none; } body.m .roadpins .pin .ring { width: 38px; height: 38px; } body.m .roadpins .pin b { font-size: 9.5px; }
 
 /* ---- debug pass: the HUD on a phone held upright keeps one row, names trimmed, the phase narrow ---- */
 body.m .bhud { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 6px; }
@@ -930,10 +930,10 @@ body.m .bhud .mid { min-width: 0; max-width: 150px; }
 body.m .bhud .phase { font-size: 10.5px; letter-spacing: .08em; } body.m .bhud .phase::before, body.m .bhud .phase::after { display: none; }
 body.m .bhud .st { font-size: 9px; letter-spacing: .08em; } body.m .bhud .tot { font-size: 13px; }
 /* ---- the road's stations alternate above and below the road so their names never touch ---- */
-.pin:nth-child(even) { flex-direction: column-reverse; }
-.pin:nth-child(even) b { margin: 0 0 5px; } .pin:nth-child(even) small { order: 1; margin-bottom: 2px; }
-.pin { width: 132px; } .pin b { font-size: 11px; line-height: 1.1; } .pin small { font-size: 11px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-body.m .pin { width: 88px; }
+.roadpins .pin:nth-child(even) { flex-direction: column-reverse; }
+.roadpins .pin:nth-child(even) b { margin: 0 0 5px; } .roadpins .pin:nth-child(even) small { order: 1; margin-bottom: 2px; }
+.roadpins .pin { width: 132px; } .roadpins .pin b { font-size: 11px; line-height: 1.1; } .roadpins .pin small { font-size: 11px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+body.m .roadpins .pin { width: 88px; }
 
 /* =====================================================================
    Pass 8: motes of dust in the title's light, a sheen on the title

@@ -1,7 +1,11 @@
-# Anointed 1.3.1
+# Anointed 1.3.2
 
-## 1.3.1
-- The map on a house's sheet (title screen) drew the sea over the land on the 1066 and Empire maps. The land is now clipped properly, and only the house's own counties and their neighbours are named.
+## 1.3.2
+- Fable's 1.3.1 hotfix (the map's names, castles and banners restored) together with the house-sheet map fix: the small map on a house's sheet drew the sea over the land on the 1066 and Empire maps; the land is now clipped properly, and only the house's own counties and their neighbours are named.
+
+## 1.3.1 — hotfix (Nov 2026)
+- **The map lost its names, castles and banners from 1.2.0 to 1.3.0.** Cause: the road scene's station styles were written for a class `.pin`, which the map's overlay groups also carry (`g.pin` — every label, castle and banner on the map); the rule's `transform: translate(-50%,-50%)` and `display: flex` threw every one of them off screen, and the glide transition on moving banners was overridden. The road's rules are now scoped to `.roadpins .pin`, and the map's own `.pin` transition is restored. The audit now also checks that county names are on screen, so this cannot slip through again. Apologies to Jeff — this one was mine.
+
 
 ## 1.3.0 — the field, again, and a polish of the interface (Nov 2026)
 No rule, number or text of play changed.

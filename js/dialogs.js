@@ -116,7 +116,7 @@ function openLog() {
 }
 
 // ================= SETTINGS =================
-const APP_VERSION = '1.3.1';
+const APP_VERSION = '1.3.2';
 function openSettings() {
   const seg = (key, opts) => `<div class="seg">${opts.map(([v, l, i]) => `<button class="${SET[key] === v ? 'on' : ''}" onclick="setOpt('${key}','${v}')">${ico(i)}${l}</button>`).join('')}</div>`;
   const sw = key => `<div class="sw${SET[key] ? ' on' : ''}" onclick="setOpt('${key}',${!SET[key]})"></div>`;
