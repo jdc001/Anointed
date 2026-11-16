@@ -1,4 +1,10 @@
-# Anointed 1.5.5
+# Anointed 1.5.6
+
+## 1.5.6: Better oil
+- The catapult's single oil pot is now **Large flaming oil**: a bigger, burning pot with a heavier fire trail. It bursts over the bailey and keeps burning for several seconds, killing more defenders as it burns. Walls still shelter the garrison, but less than before. Four large pots over full stone walls now kill about 9 defenders on average, against about 3 before.
+- Oil that hits a wall burns a defender on the wall walk about half the time, and leaves a fire on the stone.
+- The three-pot volley is renamed **3 small fire pots**, and burns a little longer too.
+- Every ammunition button shows how many shots are left in a dark badge, and the chosen button's name is in dark type so it reads on gold.
 
 ## 1.5.5
 - Tapping an army in the army bar centres the map on it (on the county it besieges, if it is at a siege), whatever county is selected.
