@@ -18,7 +18,7 @@ function openRansom() {
   G.sel = null; render(); if (isPhone()) setSheet('full');
   setTimeout(() => { const b = document.getElementById('ransombox'); if (b) { b.scrollIntoView({ behavior: 'smooth', block: 'center' }); b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 1200); } }, 60);
 }
-function pickArmy(id) { { const a = army(me(), id); if (a && slotState(a) === 'captive') { G.army = id; sfx('click'); return openRansom(); } } G.army = id; sfx('click'); render(); const a = army(me(), id); if (a.loc && !G.sel) focusProv(a.loc, VIEW.w); }
+function pickArmy(id) { { const a = army(me(), id); if (a && slotState(a) === 'captive') { G.army = id; sfx('click'); return openRansom(); } } G.army = id; sfx('click'); render(); const a = army(me(), id); if (a.loc) focusProv(a.siege || a.loc, VIEW.w); }
 const ARMY_NUM = a => ARMY_IDS.indexOf(a.id) + 1;
 function armyPay(a) { return atRest(me(), a) ? 0 : armyCost(a); }
 function slotState(a) {

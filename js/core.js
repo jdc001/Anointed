@@ -26,8 +26,29 @@ const coreR = r => r === SC.kingdom.core;
 function rulerOf(fid) {
   const d = FAC(fid);
   if (d.emperor) return `Emperor ${d.pname}`;
-  if (d.kingOf && d.kingOf.length) return `King ${d.pname} ${SC.crown.of}`;
+  const realms = realmsOf(fid).map(r => SC.realmCrowns[r]);
+  if (d.kingOf && d.kingOf.length) return `King ${d.pname} ${SC.crown.of}${realms.length ? ' and of ' + andList(realms) : ''}`;
+  if (realms.length) return `King ${d.pname} of ${andList(realms)}`;
   return `${d.title} ${d.pname}`;
+}
+// the lesser realms of a map (all of Ireland, all of Scotland, all of Wales): whoever holds every county of one is its king
+function realmsOf(fid) {
+  const R = SC.realmCrowns; if (!R || !fid || typeof G === 'undefined' || !G || !G.provs) return [];
+  return Object.keys(R).filter(r => { let n = 0; for (const p of provList()) if (p.r === r) { if (p.owner !== fid) return false; n++; } return n > 0; });
+}
+function realmCrownTick() {
+  const R = SC.realmCrowns; if (!R) return;
+  const first = !G.realmK, was = G.realmK = G.realmK || {};
+  for (const r in R) {
+    const ps = provList().filter(p => p.r === r), o = ps[0] && ps[0].owner, now = o && ps.every(p => p.owner === o) ? o : null;
+    if (now === (was[r] || null)) continue;
+    const old = was[r]; if (now) was[r] = now; else delete was[r];
+    if (first) continue;
+    if (now === G.player) { report(`King of ${R[r]}`, `Every county of ${R[r]} is yours. Its lords and bishops acknowledge you as King of ${R[r]}, and you are styled so from today.`); sfx('bell'); }
+    else if (now) note(`${FAC(now).name} holds all ${R[r]}: ${rulerOf(now)}.`);
+    else if (old === G.player) report(`${R[r]} is divided`, `You no longer hold every county of ${R[r]}, and the title King of ${R[r]} lapses until it is whole again.`);
+    else if (old && G.fac[old]) note(`${FAC(old).name} no longer holds all ${R[r]}.`);
+  }
 }
 const inCrown = (fid, p) => !!(KPROV[p.id] && (FAC(fid).kingOf || []).some(k => KPROV[p.id].includes(k)));
 function levyMax(p) {
@@ -553,6 +574,7 @@ function plagueTick() {
 }
 function endRound() {
   fixSieges();
+  realmCrownTick();
   plagueTick();
   for (const p of provList()) {
     const s = besiegerOf(p);

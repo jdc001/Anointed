@@ -237,6 +237,8 @@ const WIGHT = [[-1.55, 50.68], [-1.3, 50.77], [-1.08, 50.7], [-1.25, 50.58], [-1
 const SEA = [[-20, 40], [20, 40], [20, 70], [-20, 70]];
 
 return {
+  // the lesser crowns: hold every county of one and you are styled its king
+  realmCrowns: { ir: 'Ireland', sc: 'Scotland', wa: 'Wales' },
   id: 'britain', FACTIONS, PROV, REGION_NAME, SEA_ROUTES, EDGES, SEA_LABELS, GENERALS, LADIES,
   name: 'Great Britain & Ireland, 1066', sub: 'England, Scotland, Wales, Ireland and the North', game: 'The Crown of the English',
   geo: { LON0: -11.0, LAT1: 61.4, SX: 57, SY: 98, MW: 1220, MH: 1310, lands: [CONTI, GB, IRE, NOR, ORK, SHE, LEW, UIST, SKYE, MULL, ISLAY, MAN, WIGHT], seas: [SEA], isles: [] },

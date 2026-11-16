@@ -1,4 +1,8 @@
-# Anointed 1.5.4
+# Anointed 1.5.5
+
+## 1.5.5
+- Tapping an army in the army bar centres the map on it (on the county it besieges, if it is at a siege), whatever county is selected.
+- 1066: hold every county of Ireland, Scotland or Wales and you are styled its king (King Diarmait of Ireland, or King Harold of the English and of Ireland). The title is announced when you win it, and lapses, with a report, if the realm is divided again. Computer houses earn the titles the same way.
 
 ## 1.5.4: Moving garrisons
 - On one of your castle counties, the Army tab has **Send men to another castle**: move men one at a time or the whole garrison to any castle of yours up to two counties away, through your own or allied land. They arrive at once. A castle that takes men in cannot send any on until the next turn, so men cannot be relayed across the realm in one go. Besieged castles can neither send nor receive.
