@@ -271,8 +271,8 @@ return {
   realm: 'Germany', foreignTxt: 'German lords resent foreign rule', foreignAsk: 'German lords ask double of foreigners',
   kingdom: { regions: ['de'], core: 'de', n: 'the Germans', short: 'Germany', keys: ['mainz'], at: 'Mainz' },
   date: { y0: 1002, s0: 3, yOff: 0, roman: 'MII' },
-  truce: 3,
-  peace: { Name: "The Emperor's Mourning", name: 'the mourning for Otto', ends: 'Otto is buried at Aachen beside Charlemagne and the mourning is over. The great houses may now make war on each other.', breakTxt: 'This attack breaks the mourning for the emperor.' },
+  truce: 5,
+  peace: { Name: "The Emperor's Mourning", name: 'the mourning for Otto', ends: 'A year has passed since Otto died. He lies at Aachen beside Charlemagne, the mourning is over, and the princes have done with talking. The great houses may now make war on each other.', breakTxt: 'This attack breaks the mourning for the emperor.' },
   short: { upperlorraine: 'Upper Lorraine', lorraine: 'Lower Lorraine', carinthia: 'Carinthia', byzantium: 'Byzantium', crescentii: 'Rome' },
   crown: {
     title: 'King of the Romans', of: 'of the Romans', the: 'the crown of the Romans', people: 'the Germans', latin: 'REX ROMANORUM', regnum: 'Regnum Teutonicorum', rex: 'Rex Romanorum',
@@ -320,7 +320,7 @@ return {
     top: '<p><b>The Empire in 1002.</b> Otto III is dead without a son, and the throne of the Germans is empty. Be anointed King of the Romans at Mainz, then win the empire: hold Mainz, Aachen and Rome with half the German kingdom, and the Pope crowns you emperor. The princes of the kingdom, the Slav dukes, the lords of Italy and the Lombard princes of the south all take what they can. Fourteen houses, from Holstein to Salerno, and the Greeks at Bari.</p>',
     sea: '<p><b>Sea crossings.</b> Dotted lines on the map join counties across the water: Rügen to the shore, and the sea lanes of the Adriatic and the Ligurian coast. An army marches or strikes along one as if the two counties touched. Only the counties of the German kingdom count toward the crown.</p>',
     rich: 'The rich land is along the Rhine and in the cities of Lombardy.',
-    peace: () => `<p><b>The emperor's mourning.</b> For the first ${TRUCE} turns, while Otto is carried home to Aachen, the bishops forbid war between the great houses. Break the peace and you are excommunicated.</p>`,
+    peace: () => `<p><b>The emperor's mourning.</b> For the first ${TRUCE} turns, a year of mourning while Otto is carried home to Aachen and the princes argue over his crown, the bishops forbid war between the great houses. Break the peace and you are excommunicated.</p>`,
     powers: `<p><b>Beyond the Empire.</b> The hatched lands at the edge of the map are not for conquest.</p>
       <p><b>Byzantium.</b> The Emperor Basil's catepan holds Bari and the south-east with strong garrisons. Constantinople mostly leaves Italy alone. Attack the Greeks, or grow too strong in the south, and the imperial fleet lands an army.</p>
       <p><b>The Saracens.</b> From the second year, the emir of Sicily's ships raid the coasts of southern Italy. Pay tribute to send them away, or fight.</p>

@@ -244,7 +244,7 @@ return {
   kingdom: { regions: ['en'], core: 'en', n: 'the English', short: 'England', keys: ['london'], at: 'Westminster' },
   date: { y0: 1066, s0: 3, yOff: 0, roman: 'MLXVI' },
   truce: 3,
-  peace: { Name: 'The Truce of God', name: 'the Truce of God', ends: 'The winter seas are open and the Truce of God has run its course. The great houses may now make war on each other.', breakTxt: 'This attack breaks the Truce of God.' },
+  peace: { Name: 'The Truce of God', name: 'the Truce of God', ends: 'The summer is over and the invasion fleets are at sea. The Truce of God has run its course, and the great houses may now make war on each other.', breakTxt: 'This attack breaks the Truce of God.' },
   short: { eastanglia: 'East Anglia', northumbria: 'Northumbria', isles: 'Isles' },
   crown: {
     title: 'King of the English', of: 'of the English', the: 'the crown of England', people: 'the English', latin: 'REX ANGLORUM', regnum: 'Regnum Anglorum', rex: 'Rex Anglorum',
@@ -278,7 +278,7 @@ return {
     top: '<p><b>The islands in 1066.</b> Edward the Confessor is dead. Harold Godwinson wears the crown, but William of Normandy and Harald Hardrada of Norway both claim it, and the earls, kings and jarls of the islands will take what they can. Fifteen houses, from Norway to Munster.</p>',
     sea: '<p><b>Sea crossings.</b> Dotted lines on the map join counties across the water: the Channel from Normandy and Boulogne, the North Sea from Norway, the Irish Sea, and the chains of the Isles. An army marches or strikes along one as if the two counties touched. Only the counties of England count toward the kingdom.</p>',
     rich: 'The rich land is in the south and east of England.',
-    peace: () => `<p><b>The Truce of God.</b> For the first ${TRUCE} turns, while the winter seas are closed, the bishops forbid war between the great houses. Break the truce and you are excommunicated.</p>`,
+    peace: () => `<p><b>The Truce of God.</b> For the first ${TRUCE} turns, through the winter, spring and summer of 1066 while the fleets gather, the bishops forbid war between the great houses. Break the truce and you are excommunicated.</p>`,
     powers: `<p><b>Beyond the islands.</b> The hatched lands at the edge of the map are not for conquest.</p>
       <p><b>The Northmen.</b> Longships from Norway raid the coasts of England and Normandy. The fewer of Norway\'s four counties you hold, the more often they come; hold all four and the raids stop.</p>
       <p><b>Sweyn of Denmark.</b> King Sweyn, Cnut's nephew, has a claim of his own. From the second year his fleets raid the east coast of England. Pay the Danegeld to send them away, or fight.</p>

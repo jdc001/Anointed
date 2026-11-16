@@ -1,4 +1,9 @@
-# Anointed 1.5.2
+# Anointed 1.5.3
+
+## 1.5.3
+- 1066: the Truce of God still ends in Autumn 1066, when the invasion fleets sail, and the messages now say so (they spoke of winter seas).
+- The Empire: the emperor's mourning lasts 5 turns instead of 3, a year from Otto's death, so war opens in Spring 1003.
+- The chosen army's button in the army bar has dark text again; it had been white on the light parchment.
 
 ## 1.5.2: Ready for the App Store build
 - **Back up everything** in Settings: one file with every campaign, save slot, trophy, rank, setting and purchase, to keep in Files or iCloud Drive or move to a new device. Restore replaces what is on the device.
