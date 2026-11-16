@@ -1,4 +1,7 @@
-# Anointed 1.5.3
+# Anointed 1.5.4
+
+## 1.5.4: Moving garrisons
+- On one of your castle counties, the Army tab has **Send men to another castle**: move men one at a time or the whole garrison to any castle of yours up to two counties away, through your own or allied land. They arrive at once. A castle that takes men in cannot send any on until the next turn, so men cannot be relayed across the realm in one go. Besieged castles can neither send nor receive.
 
 ## 1.5.3
 - 1066: the Truce of God still ends in Autumn 1066, when the invasion fleets sail, and the messages now say so (they spoke of winter seas).

@@ -236,6 +236,24 @@ function raiseArmyHere(fid, pid, gid) {
   else { F.gold -= genCost(fid, d); G.genPool = G.genPool.filter(x => x !== gid); F.gens.push({ id: gid, at: o.slot }); }
   return a;
 }
+// ---- garrison to garrison: men walk to a castle of yours up to two counties away, through your own or allied land ----
+// A garrison that took in men this turn sends none on until the next, so men cannot be passed along the whole realm in one turn.
+const GAR_REACH = 2;
+const garOK = p => p && p.b.castle && !p.ruined && !besieging(p);
+function garTargets(fid, from) {
+  const p = P(from); if (!garOK(p) || p.owner !== fid) return [];
+  const d = { [from]: 0 }, q = [from], out = [];
+  while (q.length) { const c = q.shift(); if (d[c] >= GAR_REACH) continue; for (const n of ADJ[c]) if (!(n in d) && holds(fid, n)) { d[n] = d[c] + 1; q.push(n); const t = P(n); if (t.owner === fid && garOK(t)) out.push(t); } }
+  return out;
+}
+const garSentIn = id => G.garIn && G.garIn[id] === G.turn;
+function sendGar(fid, from, to, t, n = 1) {
+  const a = P(from), b = P(to);
+  if (garSentIn(from) || !garTargets(fid, from).includes(b)) return 0;
+  const k = Math.min(n, a.gar[t] || 0); if (!k) return 0;
+  a.gar[t] -= k; b.gar[t] += k; (G.garIn = G.garIn || {})[to] = G.turn;
+  return k;
+}
 // two armies in one county trade men directly; men who fought this turn cannot join an army that has not
 function shiftMen(fid, from, to, t, n = 1) {
   if (!from || !to || from === to || from.loc !== to.loc || from.siege || to.siege || !armyUsable(fid, from) || !armyUsable(fid, to)) return 0;

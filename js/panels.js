@@ -463,6 +463,7 @@ function ownPanel(p, F, A) {
       if (can.includes(A)) cta += `<button class="btn red" onclick="openPreBattle('relief','${p.id}')"><span class="lbl">${ico('swords')}Break the siege</span><small>army ${ARMY_NUM(A)}</small></button>`;
       else if (can.length) cta += `<button class="btn" onclick="pickArmy('${can[0].id}')"><span class="lbl">${ico('swords')}Army ${ARMY_NUM(can[0])} can break the siege</span><small>switch to it</small></button>`;
     }
+    h += sendGarHtml(p);
     h += defenceHtml(p);
   } else if (cur === 'build') {
     h += `<h3>Build</h3>` + buildButtons(p, F);
@@ -475,6 +476,19 @@ function ownPanel(p, F, A) {
   return h + (cta ? `<div class="cta">${cta}</div>` : '');
 }
 const UT_ALL = ['foot', 'bow', 'cav', 'cat', 'bishop'];
+// send men from this castle's garrison to another of yours within two counties
+function sendGarHtml(p) {
+  if (!p.b.castle || p.owner !== me()) return '';
+  const T = garTargets(me(), p.id), men = garMen(p) + (p.gar.cat || 0);
+  if (!T.length || !men) return '';
+  if (garSentIn(p.id)) return `<h3>Send men to another castle</h3><p class="sub">This garrison took in men this turn. It can send men on next turn.</p>`;
+  const to = T.find(q => q.id === PANEL.gto) || T[0]; PANEL.gto = to.id;
+  let h = `<h3>Send men to another castle</h3><p class="sub">To a castle of yours up to ${GAR_REACH} counties away, through your own or allied land. They arrive at once; the castle that takes them in cannot send men on until next turn.</p>
+    <div class="row" style="flex-wrap:wrap;gap:6px;margin:6px 0">${T.map(q => `<button class="btn sm${q === to ? ' gold' : ''}" onclick="PANEL.gto='${q.id}';render()">${esc(q.name)} · ${garMen(q)}</button>`).join('')}</div>
+    <div class="xfer" style="grid-template-columns:auto 1fr auto auto auto"><span></span><b>Unit</b><b>Here</b><b>${esc(to.name)}</b><span></span>`;
+  for (const t of ['foot', 'bow', 'cav', 'cat']) if (p.gar[t] || to.gar[t]) h += `<span>${ico(UNIT_ICON[t])}</span><span>${UNIT[t].n}</span><span class="ctr">${p.gar[t]}</span><span class="ctr">${to.gar[t]}</span><button class="btn sm" onclick="act('gsend','${t}')" ${p.gar[t] ? '' : 'disabled'}>Send 1</button>`;
+  return h + `</div><div class="row" style="margin-top:6px"><button class="btn sm" onclick="act('gsendAll')">Send the whole garrison to ${esc(to.name)}</button></div>`;
+}
 // a new army, raised here under a general
 function newArmyHtml(p, F) {
   const o = newArmyOptions(me(), p.id); if (!o.slot) return '';
@@ -670,6 +684,8 @@ function act(c, a) {
     case 'raiseA': if (raise(me(), a, A)) { sfx('raise'); buzz(); toast(`${UNIT[a].n} join army ${ARMY_NUM(A)}`, UNIT_ICON[a]); } else toast('Not enough silver', 'coin'); break;
     case 'xTo': case 'xFrom': { const [t, bid] = a.split(':'), B = army(me(), bid); if (c === 'xTo') shiftMen(me(), A, B, t); else shiftMen(me(), B, A, t); sfx('click'); break; }
     case 'xAllTo': case 'xAllFrom': { const B = army(me(), a); for (const t of ['foot', 'bow', 'cav', 'cat']) c === 'xAllTo' ? shiftMen(me(), A, B, t, 999) : shiftMen(me(), B, A, t, 999); sfx('raise'); break; }
+    case 'gsend': if (sendGar(me(), p.id, PANEL.gto, a, 1)) { sfx('click'); flashProv(PANEL.gto); } break;
+    case 'gsendAll': { let k = 0; for (const t of ['foot', 'bow', 'cav', 'cat']) k += sendGar(me(), p.id, PANEL.gto, t, 999); if (k) { sfx('raise'); flashProv(PANEL.gto); note(`${k} men march from ${p.name} to ${P(PANEL.gto).name}.`); } break; }
     case 'toArmy': if (p.gar[a] > 0 && slotState(A) === 'active') { p.gar[a]--; A[a]++; } break;
     case 'toGar': if (A[a] > 0) { A[a]--; p.gar[a]++; } break;
     case 'allArmy': if (slotState(A) === 'active') for (const t of ['foot', 'bow', 'cav', 'cat']) { A[t] += p.gar[t]; p.gar[t] = 0; } break;
