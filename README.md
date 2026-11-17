@@ -1,4 +1,10 @@
-# Anointed 1.5.10
+# Anointed 1.5.11
+
+## 1.5.11: More medals for each map
+Twenty-two new map medals, shown in each map's section of the medal book beside the house wins.
+- **France, 987** (8 new): The Middle Kingdom (all Lorraine), Count of the March (all the Spanish March), King of Arles (all Burgundy-Arles), Across the Narrow Sea (a county in England), The Royal Demesne (win holding Paris, Orléans, Senlis and Laon, not as the Royal Domain), Armorica (all Brittany), Lord of the Loire, From Sea to Sea (win holding Bruges and Barcelona).
+- **Britain & Ireland, 1066** (7 new): King of Scots, Prince of All Wales, The Harrying of the North, The Five Boroughs, Lord of the Isles, Duke and King (win as Normandy still holding Rouen), The Celtic Crown (win as Scotland, Gwynedd or an Irish house).
+- **The Empire, 1002** (7 new): Rex Italiae (all the kingdom of Italy), The Lombard South, Magna Graecia (every Byzantine county), Bolesław's Dream, Master of the Rhine, Four Capitals (win holding Aachen, Pavia, Rome and Regensburg), Lord of the Adriatic.
 
 ## 1.5.10
 - Catapult screen: Storm the walls shows your chance of winning with a balanced attack (the assault screen's default), worked out from the walls as they stand at that moment and updated as you bombard.

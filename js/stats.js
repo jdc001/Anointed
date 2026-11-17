@@ -173,12 +173,35 @@ const TROPHIES = [
   { id: 'anathema', n: 'Anathema', d: 'Win while excommunicated.', pts: 50, test: S => S.won && S.excom },
   { id: 'unbroken', n: 'The Crown Unbroken', d: 'Win as the house that starts with the crown (the Royal Domain, or Wessex in 1066) without ever losing it.', pts: 40, test: S => S.won && S.house === (MAPS[S.map || 'france'] || MAPS.france).crown.start && S.m.keptCrown !== false },
   { id: 'coast', n: 'Hold the Coast', d: 'Throw back two raids by Sweyn of Denmark (1066) or the Saracens (1002) in one game.', pts: 35, test: S => (S.m.raider || 0) >= 2 },
+  // ---- France, 987: more ----
+  { id: 'midkingdom', n: 'The Middle Kingdom', d: 'In 987: hold every county of Lorraine at the end of a game.', pts: 40, map: 'france', test: S => S.map === 'france' && S.f && S.f.lorraine },
+  { id: 'march', n: 'Count of the March', d: 'In 987: hold every county of the Spanish March at the end of a game.', pts: 40, map: 'france', test: S => S.map === 'france' && S.f && S.f.march },
+  { id: 'arles', n: 'King of Arles', d: 'In 987: hold every county of Burgundy-Arles, Lyon to Nice, at the end of a game.', pts: 40, map: 'france', test: S => S.map === 'france' && S.f && S.f.arles },
+  { id: 'narrowsea', n: 'Across the Narrow Sea', d: 'In 987: hold a county in England at the end of a game.', pts: 35, map: 'france', test: S => S.map === 'france' && S.f && S.f.england },
+  { id: 'demesne', n: 'The Royal Demesne', d: 'In 987: win holding Paris, Orléans, Senlis and Laon, playing any house but the Royal Domain.', pts: 45, map: 'france', test: S => S.won && S.map === 'france' && S.f && S.f.demesne },
+  { id: 'armorica', n: 'Armorica', d: 'In 987: hold all six counties of Brittany at the end of a game.', pts: 35, map: 'france', test: S => S.map === 'france' && S.f && S.f.brittany },
+  { id: 'loire', n: 'Lord of the Loire', d: 'In 987: hold Orléans, Blois, Tours, Saumur, Angers and Nantes at the end of a game.', pts: 35, map: 'france', test: S => S.map === 'france' && S.f && S.f.loire },
+  { id: 'seatosea', n: 'From Sea to Sea', d: 'In 987: win holding both Bruges and Barcelona.', pts: 50, map: 'france', test: S => S.won && S.map === 'france' && S.f && S.f.seas },
   // ---- the islands, 1066 ----
+  { id: 'scots', n: 'King of Scots', d: 'In 1066: hold every county of Scotland at the end of a game.', pts: 45, map: 'britain', test: S => S.map === 'britain' && S.f && S.f.scots },
+  { id: 'wales', n: 'Prince of All Wales', d: 'In 1066: hold every county of Wales at the end of a game.', pts: 40, map: 'britain', test: S => S.map === 'britain' && S.f && S.f.wales },
+  { id: 'harrying', n: 'The Harrying of the North', d: 'In 1066: hold York, Durham, Bamburgh, Richmond and Lancaster at the end of a game, playing any house but Northumbria.', pts: 40, map: 'britain', test: S => S.map === 'britain' && S.f && S.f.north },
+  { id: 'boroughs', n: 'The Five Boroughs', d: 'In 1066: hold York, Lincoln, Nottingham, Derby and Leicester at the end of a game.', pts: 35, map: 'britain', test: S => S.map === 'britain' && S.f && S.f.boroughs },
+  { id: 'seakings', n: 'Lord of the Isles', d: 'In 1066: hold Orkney, Shetland, Man, Skye, Lewis and Mull at the end of a game.', pts: 40, map: 'britain', test: S => S.map === 'britain' && S.f && S.f.seakings },
+  { id: 'dukeking', n: 'Duke and King', d: 'In 1066: win as Normandy still holding Rouen.', pts: 40, map: 'britain', test: S => S.won && S.map === 'britain' && S.f && S.f.dukeking },
+  { id: 'fringe', n: 'The Celtic Crown', d: 'In 1066: win as Scotland, Gwynedd or an Irish house.', pts: 60, map: 'britain', test: S => S.won && S.map === 'britain' && ['scotland', 'gwynedd', 'leinster', 'munster', 'connacht', 'ulaid'].includes(S.house) },
   { id: 'ardri', n: 'Ard Rí', d: 'In 1066: hold every county of Ireland at the end of a game.', pts: 45, map: 'britain', test: S => S.map === 'britain' && S.f && S.f.ireland },
   { id: 'britannia', n: 'Emperor of Britain', d: 'In 1066: win holding at least three counties each in England, Scotland, Wales and Ireland.', pts: 60, map: 'britain', test: S => S.won && S.map === 'britain' && S.f && S.f.four },
   { id: 'fjords', n: 'Lord of the Fjords', d: "In 1066: hold all four counties of Norway at the end of a game, playing a house that did not start with them.", pts: 40, map: 'britain', test: S => S.map === 'britain' && S.f && S.f.fjords },
   { id: 'channel', n: 'The Conquest Reversed', d: 'In 1066: as an English or Welsh house, take Rouen.', pts: 45, map: 'britain', test: S => S.map === 'britain' && S.f && S.f.rouen },
   // ---- the Empire, 1002 ----
+  { id: 'rexitaliae', n: 'Rex Italiae', d: 'In 1002: hold every county of the kingdom of Italy at the end of a game.', pts: 50, map: 'empire', test: S => S.map === 'empire' && S.f && S.f.italy },
+  { id: 'lombards', n: 'The Lombard South', d: 'In 1002: hold every Lombard county, Benevento to Gaeta, at the end of a game.', pts: 35, map: 'empire', test: S => S.map === 'empire' && S.f && S.f.lombards },
+  { id: 'graecia', n: 'Magna Graecia', d: 'In 1002: hold every Byzantine county of Italy at the end of a game.', pts: 50, map: 'empire', test: S => S.map === 'empire' && S.f && S.f.graecia },
+  { id: 'boleslaw', n: "Bolesław's Dream", d: 'In 1002: hold Gniezno, Kraków, Prague, Meissen and Moravia at the end of a game.', pts: 45, map: 'empire', test: S => S.map === 'empire' && S.f && S.f.boleslaw },
+  { id: 'rhine', n: 'Master of the Rhine', d: 'In 1002: hold Cologne, Mainz, Worms, Speyer, Strasbourg and Trier at the end of a game.', pts: 40, map: 'empire', test: S => S.map === 'empire' && S.f && S.f.rhine },
+  { id: 'capitals', n: 'Four Capitals', d: 'In 1002: win holding Aachen, Pavia, Rome and Regensburg.', pts: 55, map: 'empire', test: S => S.won && S.map === 'empire' && S.f && S.f.capitals },
+  { id: 'adriatic', n: 'Lord of the Adriatic', d: 'In 1002: hold Venice, Ravenna, Ancona, Bari and Otranto at the end of a game.', pts: 40, map: 'empire', test: S => S.map === 'empire' && S.f && S.f.adriatic },
   { id: 'rome', n: 'An Italian Emperor', d: 'In 1002: win the imperial crown with an Italian or Lombard house.', pts: 60, map: 'empire', test: S => S.won && S.map === 'empire' && ['ivrea', 'canossa', 'crescentii', 'benevento', 'salerno'].includes(S.house) },
   { id: 'ironcrown', n: 'Two Crowns', d: 'In 1002: win the empire holding Pavia, the seat of the kings of Italy, as well.', pts: 45, map: 'empire', test: S => S.won && S.map === 'empire' && S.f && S.f.pavia },
   { id: 'greeks', n: 'Bane of the Greeks', d: 'In 1002: take a county from Byzantium.', pts: 35, map: 'empire', test: S => S.map === 'empire' && (S.m.byz || 0) >= 1 },
@@ -199,13 +222,33 @@ function gameSummary() {
 // what the map trophies look at when a game ends
 function endFlags(fid) {
   const mine = id => G.provs[id] && G.provs[id].owner === fid, inR = r => provList().filter(p => p.r === r), f = {};
+  const all = ids => ids.every(mine), allR = r => { const ps = inR(r); return ps.length > 0 && ps.every(p => p.owner === fid); };
+  if (MAP_ID === 'france') {
+    f.lorraine = allR('lo'); f.march = allR('ca'); f.arles = allR('ar'); f.england = inR('en').some(p => p.owner === fid);
+    f.demesne = fid !== 'capet' && all(['paris', 'orleans', 'senlis', 'laon']);
+    f.brittany = all(['rennes', 'dol', 'nantes', 'vannes', 'cornouaille', 'leon']);
+    f.loire = all(['orleans', 'blois', 'tours', 'saumur', 'angers', 'nantes']);
+    f.seas = all(['bruges', 'barcelona']);
+  }
   if (MAP_ID === 'britain') {
     f.ireland = inR('ir').every(p => p.owner === fid);
     f.four = ['en', 'sc', 'wa', 'ir'].every(r => inR(r).filter(p => p.owner === fid).length >= 3);
     const nor = ['bergen', 'stavanger', 'sogn', 'agder']; f.fjords = nor.every(mine) && !nor.every(id => G.start && G.start[id] === fid);
     f.rouen = mine('rouen') && ['England', 'Wales'].includes(FACMAP[fid] && FACMAP[fid].realm);
+    f.scots = allR('sc'); f.wales = allR('wa');
+    f.north = fid !== 'northumbria' && all(['york', 'durham', 'bamburgh', 'richmond', 'lancaster']);
+    f.boroughs = all(['york', 'lincoln', 'nottingham', 'derby', 'leicester']);
+    f.seakings = all(['orkney', 'shetland', 'man', 'skye', 'lewis', 'mull']);
+    f.dukeking = fid === 'normandy' && mine('rouen');
   }
-  if (MAP_ID === 'empire') { f.rome = mine('rome'); f.pavia = mine('pavia'); f.elbe = ['brandenburg', 'havelberg', 'rethra', 'obodrites', 'rugen'].every(mine); }
+  if (MAP_ID === 'empire') {
+    f.rome = mine('rome'); f.pavia = mine('pavia'); f.elbe = ['brandenburg', 'havelberg', 'rethra', 'obodrites', 'rugen'].every(mine);
+    f.italy = allR('it'); f.lombards = allR('lo'); f.graecia = allR('gr');
+    f.boleslaw = all(['gniezno', 'krakow', 'prague', 'meissen', 'moravia']);
+    f.rhine = all(['cologne', 'mainz', 'worms', 'speyer', 'strasbourg', 'trier']);
+    f.capitals = all(['aachen', 'pavia', 'rome', 'regensburg']);
+    f.adriatic = all(['venice', 'ravenna', 'ancona', 'bari', 'otranto']);
+  }
   return f;
 }
 // called once when a game ends: history, trophies, points; returns what changed for the ending screens
