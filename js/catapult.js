@@ -97,7 +97,7 @@ function openCatapult(p) {
       <div class="ammo"${A.gf > 0 ? ' style="grid-template-columns:repeat(4,1fr)"' : ''}>${AMMO.filter(([id]) => id !== 'greek' || A.gf > 0).map(([id, n, i], k) => `<button class="btn sm${k === 0 ? ' on' : ''}" data-am="${id}"><span class="lbl">${ico(i)}</span><small>${n}</small><small class="amn" id="am-${id}"></small></button>`).join('')}</div>
       <button class="btn" style="flex:1" id="ct-auto" onclick="ctAuto()"><span class="lbl">${ico('cat')}Fire the rest</span><small>quick volley</small></button>
       <button class="btn gold" style="flex:1" onclick="finishCatapult()"><span class="lbl">${ico('check')}Finish bombardment</span></button>
-      ${A.stormed ? '' : `<button class="btn red" style="flex:1" onclick="ctStorm()"><span class="lbl">${ico('swords')}Storm the walls</span></button>`}</div>
+      ${A.stormed ? '' : `<button class="btn red" style="flex:1" onclick="ctStorm()"><span class="lbl">${ico('swords')}Storm the walls</span><small id="ct-odds">balanced</small></button>`}</div>
     <p class="sub">${CASTLE_N[lv]}${p.b.moat ? ' behind a moat' : ''}. One heavy stone smashes a deep section of any wall. 3 light stones scatter wider and tear through wood, but only chip stone and mostly bounce off great walls. Large flaming oil bursts over the bailey and keeps burning, killing defenders for several seconds after it lands; 3 small fire pots spread the fire wider but burn fewer men. Oil that hits the wall burns the archers on it and sets wooden walls alight. Standing walls shelter the defenders from fire, so oil does most once the walls are broken. ${A.gf > 0 ? 'Greek fire brings down a whole stretch of wall, or, thrown over it, burns about a third of the garrison, but each throw has a one-in-three chance of setting the catapult alight. ' : ''}Rats are scarcer: you have one cage for each catapult, and one more; a cage holds a swarm or a single giant rat. An army sheltering in the castle suffers from fire and rats along with the garrison.</p>`, 'wide ctcard');
   // give the canvas its true shape before measuring; a bare canvas is 300 by 150 and would be measured too short
   { const c0 = $('#ctc'); c0.width = CW; c0.height = CH; }
@@ -517,6 +517,8 @@ function ctDraw() {
   set('ct-shots', String(CT.shots)); set('ct-walls', CT.ocols ? `${Math.round(CT.oh.reduce((s, v) => s + v, 0) / (CT.ocols * CT.orows) * 100)}% · ${integ < RUIN_AT ? `<span style="color:#ff9c8c">${integ}% ruin</span>` : integ + '%'}` : (integ < RUIN_AT ? `<span style="color:#ff9c8c">${integ}% ruin</span>` : integ + '%')); set('ct-def', `${ctAlive()}${CT.killed ? ` <small style="color:#ff9c8c">−${CT.killed}</small>` : ''}${CT.plague ? ' ' + ico('skull') : ''}${CT.rats.length ? ' ' + ico('rat') : ''}`);
   for (const id of ['stone', 'triple', 'oil', 'oil3']) set('am-' + id, CT.shots + ' left');
   set('am-rats', Math.min(CT.cages, CT.shots) + ' left'); set('am-giant', Math.min(CT.cages, CT.shots) + ' left'); set('am-greek', Math.min(myA().gf || 0, CT.shots) + ' left');
+  // the odds of storming now, with the walls as they stand this moment and a balanced attack (the assault screen's default)
+  if (!CT.projs.length && document.getElementById('ct-odds') && (CT.oddsAt == null || CT.t - CT.oddsAt > 0.8)) { CT.oddsAt = CT.t; set('ct-odds', `balanced · ${ctOdds()}% to win`); }
   set('ct-wind', `${CT.wind < 0 ? '◂' : CT.wind > 0 ? '▸' : '·'} ${Math.abs(CT.wind)}`);
   const m = document.getElementById('ctmsg'); if (m && m.textContent !== CT.msg) m.textContent = CT.msg;
 }
@@ -604,6 +606,13 @@ function autoBombard(A, p) {
   A.bombarded = true; A.acted = true;
   const txt = `Bombardment of ${p.name}: walls ${w0}% → ${p.ruined ? 'ruined' : p.walls + '%'}, ${kl} defenders killed${pl ? ', plague sown inside' : ''}.`;
   note(txt); toast(`Walls ${w0}% → ${p.ruined ? 'ruined' : p.walls + '%'} · ${kl} killed`, 'cat'); sfx('wall');
+}
+function ctOdds() {
+  const p = CT.p, A = myA(); if (!A || !armySize(A)) return 0;
+  const w0 = p.walls, o0 = p.outer, r0 = p.ruined;
+  p.walls = Math.round(CT.h.reduce((s, v) => s + v, 0) / (CT.cols * CT.rows) * 100);
+  if (CT.ocols) p.outer = Math.round(CT.oh.reduce((s, v) => s + v, 0) / (CT.ocols * CT.orows) * 100);
+  try { if (p.walls < RUIN_AT) p.ruined = true; return estimateWin(assaultCfg(me(), A, p, 'balanced'), 40); } finally { p.walls = w0; p.outer = o0; p.ruined = r0; }
 }
 function finishCatapult(unfired) {
   if (!CT) return;

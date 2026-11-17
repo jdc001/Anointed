@@ -154,6 +154,8 @@ function mineDraw(S) {
 // ================= VIKING RAID =================
 // Longships row in from the sea, one lane each. Drag your companies onto the beach to meet them; tap a ship to
 // loose arrows at it. A ship that lands unopposed sends its crew to plunder the village.
+// how hard the raid is: crews, speed and spacing of the ships, the bowmen's rate and aim, and the fights on the sand
+const RAID = { crew0: 5, crewR: 4, sp0: 30, gap0: 1.5, gapR: 2, cool: 1.4, hit: 0.5, crewW: 1.1, run: 40, charge: 120 };
 const RW = 800, RH = 440, R_BEACH = 300, R_LAND = 420, R_VILL = 700, R_LANES = [70, 150, 230, 310, 390];
 // the Danes raid the Channel, the German Sea and Biscay coasts; Normandy's choice about its ports changes the odds
 const raiders = () => me() === 'denmark' ? 'Wendish pirates' : 'Northmen';
@@ -211,7 +213,7 @@ function startRaid() {
   const S = MG = mgScene(RW, RH);
   const lanes = [...R_LANES].sort(() => Math.random() - .5);
   Object.assign(S, { kind: 'raid', p, boats: [], toks: [], rep: 0, pl: 0, lostTok: 0, cool: 0, arrows: [], fx: [], msg: `${r.ships} longships! Get your companies to the beach.` });
-  let t = 0.6; for (let i = 0; i < r.ships; i++) { S.boats.push({ lane: lanes[i % 5], x: -60 - Math.random() * 30, crew: 3 + rnd(4), at: t, st: 'wait', sp: 27 + Math.random() * 10 }); t += 2.2 + Math.random() * 2.2; }
+  let t = 0.6; for (let i = 0; i < r.ships; i++) { S.boats.push({ lane: lanes[i % 5], x: -60 - Math.random() * 30, crew: RAID.crew0 + rnd(RAID.crewR), at: t, st: 'wait', sp: RAID.sp0 + Math.random() * 12 }); t += RAID.gap0 + Math.random() * RAID.gapR; }
   for (let i = 0; i < K; i++) S.toks.push({ x: 480 + (i % 2) * 30, y: R_LANES[Math.round(i * 4 / Math.max(1, K - 1))] || 230, str: 4, alive: true });
   S.ground = makeLayer(RW, RH, S.dpr, x => drawRaidGround(x, S));
   let drag = null;
@@ -224,8 +226,8 @@ function startRaid() {
       .sort((a, c) => Math.abs((a.st === 'land' ? a.rx : a.x) - q.x) - Math.abs((c.st === 'land' ? c.rx : c.x) - q.x))[0];
     if (tgt && S.cool <= 0) {
       const tx = tgt.st === 'land' ? tgt.rx + 10 : tgt.x;
-      S.cool = 0.4; S.arrows.push({ x0: 560, y0: q.y < 220 ? 120 : 330, x1: tx, y1: tgt.lane, t: 0 }); sfx('arrows');
-      if (Math.random() < 0.85) { tgt.crew -= Math.random() < 0.3 ? 2 : 1;
+      S.cool = RAID.cool; S.arrows.push({ x0: 560, y0: q.y < 220 ? 120 : 330, x1: tx, y1: tgt.lane, t: 0 }); sfx('arrows');
+      if (Math.random() < RAID.hit) { tgt.crew -= Math.random() < 0.15 ? 2 : 1;
         if (tgt.crew <= 0) { if (tgt.st === 'row') { tgt.st = 'sunk'; S.msg = 'The ship is shot to pieces and drifts away!'; sfx('miss'); } else { tgt.st = 'gone'; S.msg = 'The last of the landing party falls on the sand!'; } S.rep++; } }
       return;
     }
@@ -236,7 +238,7 @@ function startRaid() {
   mgRun(S, dt => { raidUpdate(S, dt); if (MG === S) raidDraw(S); });
 }
 function raidFight(S, b, tk) {
-  const win = Math.random() < tk.str / (tk.str + b.crew * 0.8);
+  const win = Math.random() < tk.str / (tk.str + b.crew * RAID.crewW);
   S.fx.push({ x: tk.x, y: tk.y, t: 0 }); sfx('clash'); buzz(30);
   if (win) { b.st = 'gone'; S.rep++; tk.str = Math.max(2, tk.str - (b.crew >= 4 ? 1 : 0)); S.msg = 'Your men drive them back into the sea!'; }
   else { tk.alive = false; S.lostTok++; b.crew = Math.max(1, b.crew - 2); S.msg = 'The raiders cut down a company!'; }
@@ -249,9 +251,9 @@ function raidUpdate(S, dt) {
     if (b.st === 'wait' && S.t >= b.at) b.st = 'row';
     if (b.st === 'row') { b.x += b.sp * dt; if (b.x >= R_BEACH - 10) { b.x = R_BEACH - 10; const tk = S.toks.find(k => k.alive && Math.abs(k.y - b.lane) < 30 && k.x < R_LAND + 40); if (tk) { if (!raidFight(S, b, tk)) b.st = 'land'; } else { b.st = 'land'; S.msg = 'A ship beaches unopposed. Its crew run for the village!'; } if (b.st === 'land') { b.rx = R_BEACH + 10; } } }
     if (b.st === 'land') {
-      b.rx += 34 * dt;
+      b.rx += RAID.run * dt;
       // a company close by charges the raiders without being told
-      const near = S.toks.filter(k => k.alive && k !== S.drag && Math.abs(k.y - b.lane) < 90 && Math.abs(k.x - b.rx) < 150).sort((a, c) => Math.hypot(a.x - b.rx, a.y - b.lane) - Math.hypot(c.x - b.rx, c.y - b.lane))[0];
+      const near = S.toks.filter(k => k.alive && k !== S.drag && Math.abs(k.y - b.lane) < 90 && Math.abs(k.x - b.rx) < RAID.charge).sort((a, c) => Math.hypot(a.x - b.rx, a.y - b.lane) - Math.hypot(c.x - b.rx, c.y - b.lane))[0];
       if (near) { const dx = b.rx - near.x, dy = b.lane - near.y, d = Math.hypot(dx, dy) || 1; near.x += dx / d * 90 * dt; near.y += dy / d * 90 * dt; }
       const tk = S.toks.find(k => k.alive && Math.abs(k.y - b.lane) < 34 && Math.abs(k.x - b.rx) < 30);
       if (tk) raidFight(S, b, tk);

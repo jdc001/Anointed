@@ -1,4 +1,8 @@
-# Anointed 1.5.9
+# Anointed 1.5.10
+
+## 1.5.10
+- Catapult screen: Storm the walls shows your chance of winning with a balanced attack (the assault screen's default), worked out from the walls as they stand at that moment and updated as you bombard.
+- Viking raids are harder again. Crews are bigger (5 to 8), ships come a little faster and closer together, bowmen shoot more slowly and hit half the time, and a company on the beach has a fairer fight against a full crew. In test runs a near-perfect defence of 5 ships drives off about 4 and loses most of its companies; doing nothing drives off about 2. Before, tapping arrows alone drove off all 5 every time.
 
 ## 1.5.9
 - Catapult screen on iPad: the bottom row of buttons (Fire the rest, Finish bombardment, Storm the walls) no longer runs off the bottom of the screen. The shot counters added in 1.5.6 appeared after the field had been sized to fit; they now keep their space from the start, and the field is measured again once the first frame is drawn.
