@@ -1,4 +1,7 @@
-# Anointed 1.5.6
+# Anointed 1.5.7
+
+## 1.5.7
+- Guide fix: houses whose seat has no castle-less lesser lord nearby (Upper Lorraine at Bar, Lower Lorraine, Anjou, Barcelona, Roussillon) skipped the "Take a county" step and went straight to "What it pays", as if a county had been won. The guide now picks the weakest lesser lord's castle in reach instead, holds it with only a handful of men for this one lesson, and tells you to storm it. The income, farm and buildings steps only appear once the county is really yours.
 
 ## 1.5.6: Better oil
 - The catapult's single oil pot is now **Large flaming oil**: a bigger, burning pot with a heavier fire trail. It bursts over the bailey and keeps burning for several seconds, killing more defenders as it burns. Walls still shelter the garrison, but less than before. Four large pots over full stone walls now kill about 9 defenders on average, against about 3 before.

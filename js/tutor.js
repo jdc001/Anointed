@@ -17,7 +17,13 @@ function tutPickPrey() {
   const ok = q => !q.owner && !q.ally && !q.b.castle && strikeFrom(me(), A, q), weak = (x, y) => fighters(defenders(x)) - fighters(defenders(y));
   const next = (ADJ[A.loc] || []).map(P).filter(ok).sort(weak);
   const c = next.length ? next : provList().filter(ok).sort(weak);
-  return c[0] ? c[0].id : null;
+  if (c[0]) return c[0].id;
+  // some seats (Bar, Angers, Barcelona) have only castles of lesser lords around them: the weakest of those, lightly held
+  // for this one lesson, to be stormed at once
+  const forts = provList().filter(q => !q.owner && !q.ally && q.b.castle && !q.ruined && strikeFrom(me(), A, q)).sort(weak);
+  if (!forts[0]) return null;
+  const q = forts[0]; q.gar = { foot: Math.min(q.gar.foot, 2), bow: 0, cav: 0, cat: 0 }; q.militia = Math.min(q.militia, 3);
+  return q.id;
 }
 // the castle to bombard on the second turn: a lesser lord's castle the army can reach
 function tutPickCastle() {
@@ -31,12 +37,13 @@ const TUT = [
   { id: 'gather', t: 'Gather the host', b: () => `Now open the Army tab and tap All to army. Every man in the garrison joins army 1, the host you campaign with. Men in an army fight anywhere, but they are paid every turn.`, done: d => d.allArmy || d.toArmy },
   { id: 'church', t: 'The Church', b: () => `Open the Church ${where('at the top', 'in the bottom bar')} and ask the Pope to bless your arms. It is free this time and he will say yes; usually it costs ${POPE.bless.c} d and he may refuse. A blessing makes your men fight harder for ${TR(me()).bless || 3} turns. The more cardinals you have in Rome, the likelier he listens.`,
     enter: () => { G.tut.free = G.tut.free || {}; G.tut.free.bless = 1; }, done: d => d.pope },
-  { id: 'attack', t: 'Take a county', b: () => { const q = tutP('prey'); return q ? `${q.name}, next to ${tutHome().name}, belongs to ${q.lord}: no house colour, no castle, only peasant levies. Tap ${q.name}, then Attack, then Sound the advance (or Auto-resolve). Lesser lords may be attacked at any time.` : 'Tap a neighbouring county with no house colour and no castle, then attack it.'; },
-    enter: () => { G.tut.prey = tutPickPrey(); G.tut.inc0 = inc(); }, done: () => { const q = tutP('prey'); return q ? holds(me(), q.id) : true; } },
-  { id: 'income', t: 'What it pays', next: true, b: () => { const q = tutP('prey'); return `${q ? q.name : 'The county'} is yours. Your lands now bring in ${inc()} d a turn, up from ${G.tut.inc0}. Counties pay less the further they lie from your seat. But army 1 costs ${pay()} d a turn in pay, so the treasury at the top grows by only ${inc() - pay()}. Men in a garrison are free: send them home when you are not campaigning.`; } },
-  { id: 'farm', t: 'Build a farm', b: () => { const q = tutP('prey'); return `Tap ${q ? q.name : 'your new county'}, open its Build tab and build Farms (${BLD.farm.c} d). Farms usually take ${BLD.farm.t} turns to finish; this once they go up at once, so you can see what they do.`; },
+  { id: 'attack', t: 'Take a county', b: () => { const q = tutP('prey'); return !q ? '' : q.b.castle ? `${q.name}, near ${tutHome().name}, belongs to ${q.lord}: no house colour, and an old castle with only a handful of men in it. Tap ${q.name}, then Storm at once, then Sound the advance (or Auto-resolve). Lesser lords may be attacked at any time.` : `${q.name}, next to ${tutHome().name}, belongs to ${q.lord}: no house colour, no castle, only peasant levies. Tap ${q.name}, then Attack, then Sound the advance (or Auto-resolve). Lesser lords may be attacked at any time.`; },
+    skip: () => !tutP('prey'),
+    enter: () => { G.tut.prey = tutPickPrey(); G.tut.inc0 = inc(); }, done: () => { const q = tutP('prey'); return !!q && holds(me(), q.id); } },
+  { id: 'income', t: 'What it pays', next: true, skip: () => !tutP('prey') || !holds(me(), G.tut.prey), b: () => { const q = tutP('prey'); return `${q ? q.name : 'The county'} is yours. Your lands now bring in ${inc()} d a turn, up from ${G.tut.inc0}. Counties pay less the further they lie from your seat. But army 1 costs ${pay()} d a turn in pay, so the treasury at the top grows by only ${inc() - pay()}. Men in a garrison are free: send them home when you are not campaigning.`; } },
+  { id: 'farm', t: 'Build a farm', skip: () => !tutP('prey') || !holds(me(), G.tut.prey), b: () => { const q = tutP('prey'); return `Tap ${q ? q.name : 'your new county'}, open its Build tab and build Farms (${BLD.farm.c} d). Farms usually take ${BLD.farm.t} turns to finish; this once they go up at once, so you can see what they do.`; },
     enter: () => { G.tut.instant = 'farm'; G.tut.inc1 = inc(); }, done: () => { const q = tutP('prey'); return q ? (q.b.farm || 0) > 0 : true; } },
-  { id: 'farmed', t: 'Buildings pay', next: true, b: () => `Your lands now bring in ${inc()} d a turn, up ${Math.max(0, inc() - (G.tut.inc1 ?? inc()))} from the farms, leaving ${inc() - pay()} a turn after the army's pay. Buildings keep paying for the rest of the game: farms, market towns, mines, ports. A busy realm builds something every turn.` },
+  { id: 'farmed', t: 'Buildings pay', next: true, skip: () => !tutP('prey') || !holds(me(), G.tut.prey), b: () => `Your lands now bring in ${inc()} d a turn, up ${Math.max(0, inc() - (G.tut.inc1 ?? inc()))} from the farms, leaving ${inc() - pay()} a turn after the army's pay. Buildings keep paying for the rest of the game: farms, market towns, mines, ports. A busy realm builds something every turn.` },
   { id: 'peace', t: SC.peace.Name, next: true, b: () => `${SC.peace.Name} holds until ${dateStr(TRUCE)}: until then no great house may attack another, or the Pope will excommunicate it. Lesser lords like the one you just beat are fair game. Use the peace to grow, and to make friends before it ends.` },
   { id: 'pact', t: 'Guard your back', b: () => `Open ${where('Diplomacy', 'Envoys')}, choose a neighbouring house you do not mean to fight, and sign a pact of peace. Neither of you can break it, so you can turn your army elsewhere when the peace ends.`, done: d => d.pact },
   { id: 'end', t: 'End the turn', b: () => 'Press End turn. The other houses move, and the map shows what the ones near you did.', done: d => (d.end || 0) >= 1 },
@@ -64,7 +71,7 @@ function renderTutor() {
   if (!T || G.over) { if (el) el.remove(); return; }
   const enter = () => { const st = TUT[T.i]; if (st && T.entered !== st.id) { T.entered = st.id; if (st.enter) st.enter(); } };
   enter();
-  while (T.i < TUT.length && (TUT[T.i].next ? T.did['next:' + TUT[T.i].id] : TUT[T.i].done(T.did))) { T.i++; sfx('coin'); enter(); }
+  while (T.i < TUT.length && ((TUT[T.i].skip && TUT[T.i].skip()) || (TUT[T.i].next ? T.did['next:' + TUT[T.i].id] : TUT[T.i].done(T.did)))) { const sk = TUT[T.i].skip && TUT[T.i].skip(); T.i++; if (!sk) sfx('coin'); enter(); }
   if (T.i >= TUT.length) { G.tut = null; if (el) el.remove(); report('The guide is done', 'You know the whole of it now: raise and gather your host, win the Pope to your side, take counties and build on them, guard your back with pacts, trade at the fair, and break walls with your siege train. Marriages, heiresses and the court are yours to discover. How to play, in Settings, has the details.'); return; }
   if (!el) { el = document.createElement('div'); el.id = 'tutor'; $('#mapwrap').appendChild(el); }
   const s = TUT[T.i];
