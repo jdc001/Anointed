@@ -4,8 +4,9 @@
 // (actions mark G.tut.did); the card then moves on. Any step can be skipped, and the guide can be ended.
 // The guide walks a new player through a real first two turns: raise a man and gather the host, win the Pope's
 // blessing, take a county and see what it pays, build a farm, guard your back, end the turn; then a market and the
-// fair, a siege train, and a bombardment where every kind of shot is tried once. A few things are free or instant
-// this once (the blessing, the farm and the market, the catapults and the Greek fire); the card says so each time.
+// fair, a siege train, and a bombardment where every kind of shot is tried once. Everything the guide asks you to
+// buy is free this once (the footman, the blessing, the farm, the pact, the market, the catapults and the Greek fire),
+// so learning costs nothing from the treasury; the card says so each time.
 const tut = () => G.tut, tutHome = () => P(homeOf(me())), tutA = () => armiesOf(me())[0];
 const tutP = k => G.tut && G.tut[k] ? P(G.tut[k]) : null;
 const inc = () => grossIncome(me()), pay = () => upkeepOf(me());
@@ -33,7 +34,8 @@ function tutPickCastle() {
 }
 const TUT = [
   { id: 'home', t: 'Your seat', b: () => `This is your duchy. Tap ${tutHome().name}, the county with the crown, to open it.`, done: () => G.sel === 'p:' + homeOf(me()) },
-  { id: 'raise', t: 'Raise a man', b: () => `In ${tutHome().name}, open the Raise tab and buy one Footman for the garrison (${unitCost(me(), 'foot')} d). Men in a garrison guard the county and cost nothing to keep.`, done: d => d.raise },
+  { id: 'raise', t: 'Raise a man', b: () => `In ${tutHome().name}, open the Raise tab and buy one Footman for the garrison (free this time; usually ${UNIT.foot.c} d). Men in a garrison guard the county and cost nothing to keep.`,
+    enter: () => { G.tut.free = G.tut.free || {}; G.tut.free.foot = 1; }, done: d => d.raise },
   { id: 'gather', t: 'Gather the host', b: () => `Now open the Army tab and tap All to army. Every man in the garrison joins army 1, the host you campaign with. Men in an army fight anywhere, but they are paid every turn.`, done: d => d.allArmy || d.toArmy },
   { id: 'church', t: 'The Church', b: () => `Open the Church ${where('at the top', 'in the bottom bar')} and ask the Pope to bless your arms. It is free this time and he will say yes; usually it costs ${POPE.bless.c} d and he may refuse. A blessing makes your men fight harder for ${TR(me()).bless || 3} turns. The more cardinals you have in Rome, the likelier he listens.`,
     enter: () => { G.tut.free = G.tut.free || {}; G.tut.free.bless = 1; }, done: d => d.pope },
@@ -41,14 +43,15 @@ const TUT = [
     skip: () => !tutP('prey'),
     enter: () => { G.tut.prey = tutPickPrey(); G.tut.inc0 = inc(); }, done: () => { const q = tutP('prey'); return !!q && holds(me(), q.id); } },
   { id: 'income', t: 'What it pays', next: true, skip: () => !tutP('prey') || !holds(me(), G.tut.prey), b: () => { const q = tutP('prey'); return `${q ? q.name : 'The county'} is yours. Your lands now bring in ${inc()} d a turn, up from ${G.tut.inc0}. Counties pay less the further they lie from your seat. But army 1 costs ${pay()} d a turn in pay, so the treasury at the top grows by only ${inc() - pay()}. Men in a garrison are free: send them home when you are not campaigning.`; } },
-  { id: 'farm', t: 'Build a farm', skip: () => !tutP('prey') || !holds(me(), G.tut.prey), b: () => { const q = tutP('prey'); return `Tap ${q ? q.name : 'your new county'}, open its Build tab and build Farms (${BLD.farm.c} d). Farms usually take ${BLD.farm.t} turns to finish; this once they go up at once, so you can see what they do.`; },
-    enter: () => { G.tut.instant = 'farm'; G.tut.inc1 = inc(); }, done: () => { const q = tutP('prey'); return q ? (q.b.farm || 0) > 0 : true; } },
+  { id: 'farm', t: 'Build a farm', skip: () => !tutP('prey') || !holds(me(), G.tut.prey), b: () => { const q = tutP('prey'); return `Tap ${q ? q.name : 'your new county'}, open its Build tab and build Farms. This once they are free and go up at once, so you can see what they do; usually they cost ${BLD.farm.c} d and take ${BLD.farm.t} turns.`; },
+    enter: () => { G.tut.instant = 'farm'; G.tut.inc1 = inc(); G.tut.free = G.tut.free || {}; G.tut.free['b:farm'] = 1; }, done: () => { const q = tutP('prey'); return q ? (q.b.farm || 0) > 0 : true; } },
   { id: 'farmed', t: 'Buildings pay', next: true, skip: () => !tutP('prey') || !holds(me(), G.tut.prey), b: () => `Your lands now bring in ${inc()} d a turn, up ${Math.max(0, inc() - (G.tut.inc1 ?? inc()))} from the farms, leaving ${inc() - pay()} a turn after the army's pay. Buildings keep paying for the rest of the game: farms, market towns, mines, ports. A busy realm builds something every turn.` },
   { id: 'peace', t: SC.peace.Name, next: true, b: () => `${SC.peace.Name} holds until ${dateStr(TRUCE)}: until then no great house may attack another, or the Pope will excommunicate it. Lesser lords like the one you just beat are fair game. Use the peace to grow, and to make friends before it ends.` },
-  { id: 'pact', t: 'Guard your back', b: () => `Open ${where('Diplomacy', 'Envoys')}, choose a neighbouring house you do not mean to fight, and sign a pact of peace. Neither of you can break it, so you can turn your army elsewhere when the peace ends.`, done: d => d.pact },
+  { id: 'pact', t: 'Guard your back', b: () => `Open ${where('Diplomacy', 'Envoys')}, choose a neighbouring house you do not mean to fight, and sign a pact of peace. This once they will sign and ask nothing; usually a house wants gold, or a county, to agree. Neither of you can break it, so you can turn your army elsewhere when the peace ends.`,
+    enter: () => { G.tut.free = G.tut.free || {}; G.tut.free.pact = 1; }, done: d => d.pact },
   { id: 'end', t: 'End the turn', b: () => 'Press End turn. The other houses move, and the map shows what the ones near you did.', done: d => (d.end || 0) >= 1 },
-  { id: 'market', t: 'A market town', b: () => `Tap ${tutHome().name}, open Build and build a Market town (${BLD.market.c} d). It pays more than farms and lets you trade at the fair. It usually takes ${BLD.market.t} turns; this once it opens at once.`,
-    enter: () => { G.tut.instant = 'market'; }, done: () => markets() > 0 },
+  { id: 'market', t: 'A market town', b: () => `Tap ${tutHome().name}, open Build and build a Market town. It pays more than farms and lets you trade at the fair. This once it is free and opens at once; usually it costs ${BLD.market.c} d and takes ${BLD.market.t} turns.`,
+    enter: () => { G.tut.instant = 'market'; G.tut.free = G.tut.free || {}; G.tut.free['b:market'] = 1; }, done: () => markets() > 0 },
   { id: 'fair', t: 'The fair', b: () => `Once a year, in summer, merchants gather for ${SC.fair.name}. Lords with a market town bring what their lands make: grain and wool from farms, cloth from markets. Over three days you sell when the price is right; the merchants' gossip about tomorrow is usually true. This once the fair is open now.`,
     act: ['Go to the fair', 'tutFair()'], enter: () => { G.tut.fairNow = true; }, done: d => d.fair || G.fairYear === yearOf(G.turn) },
   { id: 'train', t: 'A siege train', b: () => { const A = tutA(); return `Tap ${A && A.loc ? P(A.loc).name : 'the county where army 1 stands'}, where army 1 stands, and open Raise. Buy 2 Catapults into the army (free this time, usually ${UNIT.cat.c} d each), then a jar of Greek fire (free, usually ${gfCost(me(), A)} d). Catapults break walls; nothing else does.`; },

@@ -127,6 +127,7 @@ function canBuild(p, t) {
   return (p.b[t] || 0) < MAXLV && (B.need === 'coast' ? p.seas.length > 0 : B.need === 'hills' ? p.hills : true);
 }
 function bldCost(p, t) {
+  if (tutFree(p.owner, 'b:' + t)) return 0;
   if (t === 'castle') return Math.round(CASTLE_C[castleLv(p)] * (TR(p.owner).castle || 1));
   if (t === 'rebuild') return 50;
   if (BLD[t].realm) return BLD[t].c;

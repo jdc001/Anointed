@@ -34,8 +34,10 @@ function warWill(fid, t, target) {
   return w;
 }
 // what they ask: 0 if willing, a sum in silver if reluctant, null if they will not sign at any price
-function askPrice(t, will, need, pid) {
+function askPrice(t, will, need, pid, kind) {
   if (G.challenge && G.challenge.mod && G.challenge.mod.noPacts) return null;
+  // the guide's first pact of peace: any neighbour signs, and asks nothing
+  if (kind === 'pact' && tutFree(me(), 'pact')) return 0;
   const deficit = need - will - countyValue(t, pid);
   if (deficit <= 0) return 0;
   if (need - will > 0.55) return null;
@@ -59,12 +61,12 @@ function paid(t, gold, pid) {
 }
 function signPact(kind) {
   const t = DP.f, F = G.fac[me()], len = kind === 'ally' ? DP.alen : DP.len;
-  const price = askPrice(t, pactWill(me(), t, len, kind), DEAL[kind], DP.county);
+  const price = askPrice(t, pactWill(me(), t, len, kind), DEAL[kind], DP.county, kind);
   if (!t || price === null || F.gold < price) return;
   const gave = paid(t, price, DP.county);
   const until = Math.max(G.turn, peaceUntil(me(), t)) + len;
   G.truces.push({ a: me(), b: t, until, pact: true, treaty: true, pass: kind === 'ally' }); (G.truceHist = G.truceHist || {})[pairKey(me(), t)] = until;
-  sfx('bell'); buzz(); tutorDid('pact');
+  sfx('bell'); buzz(); if (kind === 'pact') tutSpend(me(), 'pact'); tutorDid('pact');
   report(kind === 'ally' ? 'An alliance' : 'A pact of peace', `${rulerOf(t)} ${kind === 'ally' ? 'swears an alliance with you' : 'swears on the relics to keep the peace with you'} until ${dateStr(until)}${gave ? `, for ${gave}` : ''}. Neither house may attack the other until then${kind === 'ally' ? ', and the armies of each may march through the other\'s lands' : ''}.`);
   DP.county = null; save(); closeModal(); render(); showReports();
 }
@@ -119,7 +121,7 @@ function openDiplo(fid) {
   if (DP.county && !cs.some(p => p.id === DP.county)) DP.county = null;
   const county = `<div class="sub" style="margin-top:4px">Give a county to lower their price <small>(one that borders them, ✦, is worth more)</small></div>${cs.length ? `<div class="seg" style="display:flex;flex-wrap:wrap"><button class="${!DP.county ? 'on' : ''}" onclick="DP.county=null;openDiplo()">none</button>${cs.map(p => `<button class="${DP.county === p.id ? 'on' : ''}" onclick="DP.county='${p.id}';openDiplo()">${p.name}${adjTo(p, t) ? ' ✦' : ''}</button>`).join('')}</div>` : '<p class="sub" style="margin:2px 0">You have no county to give but your seat.</p>'}`;
   const signBtn = (cls, icon, label, price, on) => `<button class="btn ${cls}" style="margin-top:8px" onclick="${on}" ${price === null || F.gold < price ? 'disabled' : ''}><span class="lbl">${ico(icon)}${label}</span><small>${price === null ? 'they refuse' : price === 0 ? (DP.county ? 'for ' + P(DP.county).name : 'free') : price + ' d' + (DP.county ? ' and ' + P(DP.county).name : '') + (F.gold < price ? ' · not enough silver' : '')}</small></button>`;
-  const pp = askPrice(t, pactWill(me(), t, DP.len, 'pact'), DEAL.pact, DP.county);
+  const pp = askPrice(t, pactWill(me(), t, DP.len, 'pact'), DEAL.pact, DP.county, 'pact');
   const pact = `<h3>A pact of peace</h3><p class="sub">Neither house may attack the other while it runs. It cannot be broken.${atPeace(me(), t) ? ' A new pact begins when the present one ends.' : ''}</p>
     <div class="seg" style="display:flex">${PACT_LENS.map(([n, l]) => `<button class="${DP.len === n ? 'on' : ''}" style="flex:1;flex-direction:column;gap:0" onclick="DP.len=${n};openDiplo()">${l}<small>${n} turns</small></button>`).join('')}</div>
     <p style="margin:8px 0 0">${priceTxt(t, pp)}</p>${signBtn('gold', 'dove', 'Sign the pact', pp, "signPact('pact')")}`;

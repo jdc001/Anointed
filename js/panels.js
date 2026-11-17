@@ -669,7 +669,7 @@ function act(c, a) {
   const p = G.sel && G.sel[0] === 'p' ? P(G.sel.slice(2)) : null, F = G.fac[me()], A = myA();
   tutorDid(c);
   switch (c) {
-    case 'build': { const c0 = bldCost(p, a); if (F.gold < c0) return toast('Not enough silver', 'coin'); F.gold -= c0;
+    case 'build': { const c0 = bldCost(p, a); if (F.gold < c0) return toast('Not enough silver', 'coin'); F.gold -= c0; tutSpend(me(), 'b:' + a);
       // the guide lets one farm and one market go up at once, to show what they do
       if (G.tut && G.tut.instant === a && BLD[a] && !BLD[a].realm) { G.tut.instant = null; p.b[a] = (p.b[a] || 0) + 1; note(`${bldName(p, a)} completed in ${p.name}, at once this time.`); sfx('build'); buzz(); toast(`${BLD[a].n} finished at once, this time only`, 'hammer'); break; }
       p.build = { type: a, left: bldTurns(p, a), turn: G.turn, cost: c0 }; note(`Work begins in ${p.name}: ${bldName(p, a)}.`); sfx('build'); buzz(); toast(`Work begins: ${bldName(p, a)}`, 'hammer'); break; }
@@ -677,7 +677,7 @@ function act(c, a) {
     case 'greek': { const c = gfCost(me(), A); if (!A.cat || (A.gf || 0) >= GF_MAX || F.gold < c) break; F.gold -= c; A.gf = (A.gf || 0) + 1; tutSpend(me(), 'gf'); sfx('coin'); toast('A sealed jar of Greek fire joins the siege train', 'oil'); break; }
     case 'unbuild': if (p.build && p.build.turn === G.turn && p.build.cost != null) { F.gold += p.build.cost; note(`Work is called off in ${p.name}.`); p.build = null; sfx('click'); toast('Work cancelled, silver returned', 'coin'); } break;
     case 'raise': {
-      const cost = unitCost(me(), a); if (F.gold < cost) return toast('Not enough silver', 'coin'); F.gold -= cost;
+      const cost = unitCost(me(), a); if (F.gold < cost) return toast('Not enough silver', 'coin'); F.gold -= cost; tutSpend(me(), a);
       if (a === 'bishop') { F.bishops++; toast('A bishop joins your council', 'bishop'); } else { p.gar[a]++; toast(`${UNIT[a].n} raised in ${p.name}`, UNIT_ICON[a]); }
       sfx(a === 'bishop' ? 'bell' : 'raise'); buzz(); break;
     }

@@ -1,4 +1,7 @@
-# Anointed 1.5.7
+# Anointed 1.5.8
+
+## 1.5.8: The guide costs nothing
+- Everything the guide tells you to do is now free the one time it asks: the footman, the farm, the pact of peace (the house signs and asks nothing) and the market town, alongside the blessing, catapults and Greek fire that were already free. Each card says it is free this time and what it usually costs. Anything bought beyond the lesson costs the usual price.
 
 ## 1.5.7
 - Guide fix: houses whose seat has no castle-less lesser lord nearby (Upper Lorraine at Bar, Lower Lorraine, Anjou, Barcelona, Roussillon) skipped the "Take a county" step and went straight to "What it pays", as if a county had been won. The guide now picks the weakest lesser lord's castle in reach instead, holds it with only a handful of men for this one lesson, and tells you to storm it. The income, farm and buildings steps only appear once the county is really yours.
