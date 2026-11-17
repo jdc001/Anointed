@@ -1,4 +1,7 @@
-# Anointed 1.5.8
+# Anointed 1.5.9
+
+## 1.5.9
+- Catapult screen on iPad: the bottom row of buttons (Fire the rest, Finish bombardment, Storm the walls) no longer runs off the bottom of the screen. The shot counters added in 1.5.6 appeared after the field had been sized to fit; they now keep their space from the start, and the field is measured again once the first frame is drawn.
 
 ## 1.5.8: The guide costs nothing
 - Everything the guide tells you to do is now free the one time it asks: the footman, the farm, the pact of peace (the house signs and asks nothing) and the market town, alongside the blessing, catapults and Greek fire that were already free. Each card says it is free this time and what it usually costs. Anything bought beyond the lesson costs the usual price.

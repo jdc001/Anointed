@@ -102,6 +102,8 @@ function openCatapult(p) {
   // give the canvas its true shape before measuring; a bare canvas is 300 by 150 and would be measured too short
   { const c0 = $('#ctc'); c0.width = CW; c0.height = CH; }
   shrinkToFit($('#ctc'), CW, CH, '.ctbar .btn');
+  // once more after the first frame has filled the counters and the message, which can add height
+  setTimeout(() => { const c = $('#ctc'); if (c && c._fit !== undefined) shrinkToFit(c, CW, CH, '.ctbar .btn'); }, 120);
   const cv = $('#ctc'), dpr = clamp((cv.getBoundingClientRect().width || CW) * (window.devicePixelRatio || 1) / CW, 1, 2);
   cv.width = CW * dpr; cv.height = CH * dpr;
   const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr); CT.ctx = ctx;
