@@ -45,7 +45,7 @@ Test them with a Sandbox account in TestFlight, including "Restore a purchase" o
 ## App Store Connect
 
 - **Privacy policy URL:** https://jdc001.github.io/Anointed/privacy.html (also the support page).
-- **Privacy label:** Data Not Collected. Bug reports are sent only when the player taps Report a bug and are used only to fix the game, which Apple's rules allow to go undisclosed as optional, user-initiated feedback.
+- **Privacy label:** declare **Diagnostics: Crash Data and Other Diagnostic Data**, not linked to the user, not used for tracking, purpose App Functionality. Nothing else is collected. (Bug reports are only sent when the player taps Report a bug, but declaring them is the safe reading of Apple's rules.)
 - **Age rating:** answer "infrequent/mild cartoon or fantasy violence". Expect 9+.
 - **Screenshots:** iPhone 6.9-inch and iPad 13-inch at minimum. The end-of-game replay map is the strongest image.
 - **Name and subtitle:** see the name check notes before choosing the store title.
